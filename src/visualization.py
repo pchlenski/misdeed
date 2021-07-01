@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 
 def plot_timecourse(
     df,
-    figsize=(40,10)
+    figsize=(40,10),
     cols=15) -> None:
 
     """

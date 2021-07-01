@@ -49,7 +49,7 @@ def plot_timecourse(
 def plot_pca(
     trajectories, 
     node_name, 
-    colors=[red, blue, yellow], 
+    colors=False, 
     cmap='magma', 
     plot_endpoints=True, 
     plot_trajectories=True,
@@ -100,6 +100,13 @@ def plot_pca(
         n_samples = len(trajectories[0])
         temp_cmap = cm.get_cmap(cmap, n_samples)
         colormap = temp_cmap(range(n_samples + 1)) # +1 to avoid really light colors
+
+    # If plotting clustered data without specified clusters, generate cmap
+    elif colors == False:
+        n_clusters = len(trajectories)
+        temp_cmap = cm.get_cmap(cmap, n_clusters)
+        colormap = temp_cmap(range(n_samples + 1))
+        colors = colormap.colors
 
     # Start plotting inputs
     input_counter = 0

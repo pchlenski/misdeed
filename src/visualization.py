@@ -1,5 +1,6 @@
 # Plotting helper functions
 import matplotlib.pyplot as plt
+import pandas as pd
 from matplotlib import cm
 from sklearn.decomposition import PCA
 

@@ -1,4 +1,7 @@
 # Plotting helper functions
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from sklearn.decomposition import PCA
 
 def plot_timecourse(
     df, 

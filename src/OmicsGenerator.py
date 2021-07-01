@@ -772,7 +772,7 @@ class OmicsGenerator:
                 # TODO: Maybe this would be better if it were size-adjusted?
                 for intervention in node.interventions:
                     if intervention.affects_abundance == True:
-                        Xt += intervention.vector @ intervention.U[t]
+                        Xt += intervention.vector * intervention.U[t]
 
                 # Add biological noise:
                 noise = np.random.normal(scale=noise_var, size=node.size) 

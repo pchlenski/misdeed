@@ -109,7 +109,8 @@ def plot_pca(
         n_clusters = len(trajectories)
         temp_cmap = cm.get_cmap(cmap, n_clusters)
         colormap = temp_cmap(range(n_clusters + 1))
-        colors = colormap.colors
+        # colors = colormap.colors
+        colors = colormap
 
     # Start plotting inputs
     input_counter = 0

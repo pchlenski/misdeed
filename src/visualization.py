@@ -6,7 +6,8 @@ from matplotlib import cm
 from sklearn.decomposition import PCA
 
 def plot_timecourse(
-    df, 
+    df,
+    figsize=(40,10)
     cols=15) -> None:
 
     """
@@ -34,7 +35,7 @@ def plot_timecourse(
     n_colors = df.shape[1]
     viridis = cm.get_cmap('magma', n_colors)
     colors  = viridis(range(n_colors))
-    plots = df.plot.bar(stacked=True, figsize=(40,10), width=1.0, color=colors)
+    plots = df.plot.bar(stacked=True, figsize=figsize, width=1.0, color=colors)
     plt.legend(loc='lower left', bbox_to_anchor=(0,1,1,0), ncol=cols, mode='expand')
 
     # tweak params

@@ -1,0 +1,5 @@
+numpy>=1.19.5
+matplotlib>=3.2.2
+scipy>=1.4.1
+pandas>=1.1.5
+sklearn>=0.22.2

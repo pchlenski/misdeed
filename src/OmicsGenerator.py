@@ -11,8 +11,9 @@ class OmicsGenerator:
         Initialize generator -> set interactions -> set interventions -> generate synthetic data
 
     Attributes:
-        nodes:
-            List of nodes.
+    -----------
+    nodes:
+        List of nodes.
     """
 
     def __init__(
@@ -28,26 +29,29 @@ class OmicsGenerator:
         Initializes generator.
 
         Args:
-            time_points:
-                Integer. How many total time points to generate. Not to be confused with downsampling coefficient 
-                (applied later).
-            nodes:
-                List of strings. (Unique) node names for each node.
-            node_sizes:
-                List of ints. Node sizes for each node.
-            discard_first:
-                Integer. How many initial time points to discard. Setting higher discard_first values generally ensures 
-                samples closer to equilibrium.
-            init_full:
-                Boolean. If True, initializes all interactions, growth rates,and initial abundances at random.
-            silent:
-                Boolean. If True, suppresses all print statements.
+        -----
+        time_points:
+            Integer. How many total time points to generate. Not to be confused with downsampling coefficient (applied 
+            later).
+        nodes:
+            List of strings. (Unique) node names for each node.
+        node_sizes:
+            List of ints. Node sizes for each node.
+        discard_first:
+            Integer. How many initial time points to discard. Setting higher discard_first values generally ensures 
+            samples closer to equilibrium.
+        init_full:
+            Boolean. If True, initializes all interactions, growth rates,and initial abundances at random.
+        silent:
+            Boolean. If True, suppresses all print statements.
 
         Returns:
-            OmicsGenerator object.
+        --------
+        OmicsGenerator object.
         
         Raises:
-            TODO
+        -------
+        TODO
         """
 
         if len(nodes) != len(node_sizes):
@@ -67,7 +71,7 @@ class OmicsGenerator:
             self.add_node(node_name, size)
         
         if init_full:
-            self.init_full()
+            self._init_full()
 
         if self._silent == False:
             print("Initialized")
@@ -81,14 +85,15 @@ class OmicsGenerator:
         A class for omics nodes. Contains pointers to interactions, interventions.
 
         Attributes:
-            inbound:
-                A dict of (node name, matrix) tuples representing matrix interactions of the type Ax --> y, where y is 
-                another node. Maintained by self.add_interaction().
-            outbound:
-                A dict of (node name, matrix) tuples representing matrix interactions of the type Ay --> x, where y is 
-                another node. Maintained by self.add_interaction().
-            interventions: 
-                A list of interventions which affect this node. Maintained by self.add_intervention().
+        -----------
+        inbound:
+            A dict of (node name, matrix) tuples representing matrix interactions of the type Ax --> y, where y is 
+            another node. Maintained by self.add_interaction().
+        outbound:
+            A dict of (node name, matrix) tuples representing matrix interactions of the type Ay --> x, where y is 
+            another node. Maintained by self.add_interaction().
+        interventions: 
+            A list of interventions which affect this node. Maintained by self.add_intervention().
         """
 
         def __init__(
@@ -104,26 +109,29 @@ class OmicsGenerator:
             Initializes node.
 
             Args:
-                name:
-                    String. The node name. Must be unique.
-                size:
-                    Integer: How many elements does this node have?
-                initial_value:
-                    A vector of initial abundances for node elements. Length must be equal to size. Generally not called 
-                    on initialization - use self.add_initial_value() instead.
-                growth_rates:
-                    Intrinsic growth/death rates for node elements. Length must be equal to size. Generally not called 
-                    on initialization - use self.add_initial_value() with 'growth_rate = True' instead.
-                log_noise:
-                    Boolean. If True, noise will be added to log-relative abundances. True by default.
-                verbose:
-                    Boolean. If False, suppresses print statements.
+            -----
+            name:
+                String. The node name. Must be unique.
+            size:
+                Integer: How many elements does this node have?
+            initial_value:
+                A vector of initial abundances for node elements. Length must be equal to size. Generally not called 
+                on initialization - use self.add_initial_value() instead.
+            growth_rates:
+                Intrinsic growth/death rates for node elements. Length must be equal to size. Generally not called on 
+                initialization - use self.add_initial_value() with 'growth_rate = True' instead.
+            log_noise:
+                Boolean. If True, noise will be added to log-relative abundances. True by default.
+            verbose:
+                Boolean. If False, suppresses print statements.
 
             Returns:
-                _OmicsNode object.
+            --------
+            _OmicsNode object.
 
             Raises:
-                None (fails silently, use add_node() instead.)
+            -------
+            None (fails silently, use add_node() instead.)
             """
             
             self.name = name
@@ -152,10 +160,11 @@ class OmicsGenerator:
         one set (e.g. taxa) and another set (e.g. other taxa, metabolites, whatever)
 
         Attributes:
-            nrows:
-                Number of rows (e.g. taxa) in matrix.
-            ncols:
-                Number of columns (e.g. metabolites) in matrix.
+        -----------
+        nrows:
+            Number of rows (e.g. taxa) in matrix.
+        ncols:
+            Number of columns (e.g. metabolites) in matrix.
         """
 
         def __init__(
@@ -171,25 +180,28 @@ class OmicsGenerator:
             Initializes interaction.
 
             Args:
-                name:
-                    String. A name for this interaction. Must be unique.
-                outbound_node:
-                    Node from which the edge originates
-                inbound_node:
-                    Node at which the edge terminates
-                matrix:
-                    A matrix-type object with interactions
-                lag:
-                    Integer. How much delay to put into dependencies. For instance, a lag of 1 on an interaction means 
-                    we compute Ax_t = y_(t+1)
-                verbose:
-                    Boolean. If False, suppresses print statements.
+            -----
+            name:
+                String. A name for this interaction. Must be unique.
+            outbound_node:
+                Node from which the edge originates
+            inbound_node:
+                Node at which the edge terminates
+            matrix:
+                A matrix-type object with interactions
+            lag:
+                Integer. How much delay to put into dependencies. For instance, a lag of 1 on an interaction means we 
+                compute Ax_t = y_(t+1)
+            verbose:
+                Boolean. If False, suppresses print statements.
             
             Returns:
-                _OmicsInteraction object.
+            --------
+            _OmicsInteraction object.
 
             Raises:
-                None (fails silently, use add_interaction() instead).
+            -------
+            None (fails silently, use add_interaction() instead).
             """
 
             self.name = name
@@ -230,25 +242,28 @@ class OmicsGenerator:
             Initializes an intervention.
 
             Args:
-                name:
-                    String. A name for our intervention. Only used for printing and other bookkeeping.
-                vector:
-                    A vector-type object with reactions to the intervention.
-                node_name:
-                    String. Name of node affected by this intervention/matrix.
-                U:
-                    An indicator vector which is 1 for time points when the intervention is active, 0 otherwise.
-                affects_abundance:  
-                    Boolean. If True, intervention vector will be applied directly to the abundance vector rather than 
-                    growth rates.
-                verbose:
-                    Boolean. If False, suppresses print statements.
+            -----
+            name:
+                String. A name for our intervention. Only used for printing and other bookkeeping.
+            vector:
+                A vector-type object with reactions to the intervention.
+            node_name:
+                String. Name of node affected by this intervention/matrix.
+            U:
+                An indicator vector which is 1 for time points when the intervention is active, 0 otherwise.
+            affects_abundance:  
+                Boolean. If True, intervention vector will be applied directly to the abundance vector rather than 
+                growth rates.
+            verbose:
+                Boolean. If False, suppresses print statements.
             
             Returns:
-                _OmicsIntevention object.
+            --------
+            _OmicsIntevention object.
             
             Raises:
-                None (fails silently, use add_intervention() instead).
+            -------
+            None (fails silently, use add_intervention() instead).
             """
 
             self.name = name
@@ -281,26 +296,29 @@ class OmicsGenerator:
         Adds nodes to generator object.
 
         Args:
-            name:           
-                String. Used to identify node. Must be unique.
-            size:           
-                Length of vector associated with a time point of this node. For instance, for a metagenomics node, this 
-                would correspond to the number of taxa.
-            initial_value:  
-                Value of this node at t = 0. Must be same length as node size.
-            growth_rates:   
-                Element-wise growth/death rates for this node. Must be same length as node size.
-            log_noise:      
-                Boolean. If True, noise will be added to log-relative abundance.If False, noise will be added to 
-                relative abundances.
-            verbose:
-                Boolean. If False, suppresses print statements.
+        -----
+        name:           
+            String. Used to identify node. Must be unique.
+        size:           
+            Length of vector associated with a time point of this node. For instance, for a metagenomics node, this 
+            would correspond to the number of taxa.
+        initial_value:  
+            Value of this node at t = 0. Must be same length as node size.
+        growth_rates:   
+            Element-wise growth/death rates for this node. Must be same length as node size.
+        log_noise:      
+            Boolean. If True, noise will be added to log-relative abundance.If False, noise will be added to relative 
+            abundances.
+        verbose:
+            Boolean. If False, suppresses print statements.
     
         Returns:
-            None (modifies generator in place).
+        --------
+        None (modifies generator in place).
 
         Raises:
-            TODO
+        -------
+        TODO
         """
 
         # Check sizes
@@ -350,25 +368,28 @@ class OmicsGenerator:
             Linear algebra:     [inbound] = [matrix] @ [outbound] + [...]
 
         Args:
-            name:               
-                String. A name for this interaction.
-            outbound_node_name: 
-                String. Name of node from which the edge originates
-            inbound_node_name:  
-                String. Name of node at which the edge terminates
-            matrix:             
-                A matrix-type object with interactions
-            lag:                
-                Integer. How much delay to put into dependencies. For instance, a lag of 1 on an interaction means we 
-                compute Ax_t = y_(t+1)
-            verbose:
-                Boolean. If False, suppresses print statements.
+        -----
+        name:               
+            String. A name for this interaction.
+        outbound_node_name: 
+            String. Name of node from which the edge originates
+        inbound_node_name:  
+            String. Name of node at which the edge terminates
+        matrix:             
+            A matrix-type object with interactions
+        lag:                
+            Integer. How much delay to put into dependencies. For instance, a lag of 1 on an interaction means we 
+            compute Ax_t = y_(t+1)
+        verbose:
+            Boolean. If False, suppresses print statements.
 
         Returns:
-            None (modifies generator in place).
+        --------
+        None (modifies generator in place).
 
         Raises:
-            TODO
+        -------
+        TODO
         """
 
         # Check namespace
@@ -429,31 +450,34 @@ class OmicsGenerator:
         Must have either U or (start, end) set to specify timeframe.
 
         Args:
-            name:               
-                String. A name for our intervention. Only used for printing and other bookkeeping.
-            node_name:          
-                String. Name of node affected by this intervention/matrix.
-            vector:             
-                A vector-type object detailing, elementwise, the reactions of each node coordinate to an intervention.
-            affects_abundance:  
-                Boolean. If True, intervention vector will be applied directly to the abundance vector ratherthan to 
-                growth rates.
-            U:                  
-                An indicator vector which is 1 for time pointswhen the intervention is active, 0 otherwise.
-            start:              
-                First time point when interaction begins. Use only for interactions of the form 0*1+0*. Otherwise, use U 
-                variable instead.
-            end:                
-                Last node when interaction is active. Use only for interactions of the form 0*1+0*. Otherwise, use U 
-                variable instaed.
-            verbose:
-                Boolean. If False, suppresses print statements.
+        -----
+        name:               
+            String. A name for our intervention. Only used for printing and other bookkeeping.
+        node_name:          
+            String. Name of node affected by this intervention/matrix.
+        vector:             
+            A vector-type object detailing, elementwise, the reactions of each node coordinate to an intervention.
+        affects_abundance:  
+            Boolean. If True, intervention vector will be applied directly to the abundance vector rather than to growth 
+            rates.
+        U:                  
+            An indicator vector which is 1 for time pointswhen the intervention is active, 0 otherwise.
+        start:              
+            First time point when interaction begins. Use only for interactions of the form 0*1+0*. Otherwise, use U 
+            variable instead.
+        end:                
+            Last node when interaction is active. Use only for interactions of the form 0*1+0*. Otherwise, use U 
+            variable instaed.
+        verbose:
+            Boolean. If False, suppresses print statements.
             
         Returns:
-            None (modifies generator in place).
+        --------
+        None (modifies generator in place).
 
         Raises:
-            TODO
+        -------
+        TODO
         """
 
         # Check namespace
@@ -512,24 +536,26 @@ class OmicsGenerator:
         verbose : bool = True) -> None:
 
         """
-        Set a node value or growth rate.
+        Sets a node value or growth rate.
 
         Args:
-            node_name:      
-                Name of node being altered
-            values:         
-                Vector. Initial values for node. Must be same length as node size.
-            growth_rate:    
-                Boolean. If True, affects the growth_rate parameter of the node. Otherwise, affects initial values of 
-                node.
-            verbose:
-                Boolean. If False, suppresses print statements.
+        -----
+        node_name:      
+            Name of node being altered
+        values:         
+            Vector. Initial values for node. Must be same length as node size.
+        growth_rate:    
+            Boolean. If True, affects the growth_rate parameter of the node. Otherwise, affects initial values of node.
+        verbose:
+            Boolean. If False, suppresses print statements.
 
         Returns:
-            None (modifies generator in place).
+        --------
+        None (modifies generator in place).
 
         Raises:
-            TODO
+        -------
+        TODO
         """
 
         node = self.get(node_name, "node")
@@ -563,17 +589,19 @@ class OmicsGenerator:
         Gets a (node/interaction/intervention) by name.
 
         Args:
-            name:
-                String. Name of node/interaction/intervention.
-            type:
-                String. One of ["node", "interaction", "intervention"]. Specifies the type of generator element to look 
-                for.
+        -----
+        name:
+            String. Name of node/interaction/intervention.
+        type:
+            String. One of ["node", "interaction", "intervention"]. Specifies the type of generator element to look for.
 
         Returns:
-            _OmicsNode, _OmicsInteraction, _OmicsIntervention, or None.
+        --------
+        _OmicsNode, _OmicsInteraction, _OmicsIntervention, or None.
 
         Raises:
-            None        
+        -------
+        None
         """
 
         if type == None or type == "node":
@@ -602,14 +630,17 @@ class OmicsGenerator:
         Removes a node, intervention, or interaction from the generator by name.
 
         Args:
-            name:   
-                A string specifying the (unique) name of the element to be removed.
+        -----
+        name:   
+            A string specifying the (unique) name of the element to be removed.
         
         Returns:
-            None (modifies generator in place).
+        --------
+        None (modifies generator in place).
         
         Raises:
-            TODO
+        -------
+        TODO
         """
 
         obj = self.get(name)
@@ -662,39 +693,42 @@ class OmicsGenerator:
         self, 
         noise_var : float = 1e-2, 
         n_reads : int = 1e5, 
-        dt : float = 1e-3, 
+        dt : float = 1e-2, 
         downsample : int = 1) -> (dict, dict, dict):
 
         """
         Generates a single timecourse of synthetic data. 
         
         Args:
-            noise_var:   
-                Float. variance parameter for gaussian noise term.
-            n_reads:
-                Integer. Number of reads to draw from the unsampled distribution.
-            dt:         
-                Float. time step size which gets passed to IVP solver
-            downsample: 
-                Integer. fraction of outputs to keep (1/n). By default, keeps all samples. downsample=4 means every 4th 
-                sample is kept, etc. Downsample is deprecated. Simply modify "dt" instead.
+        -----
+        noise_var:   
+            Float. variance parameter for gaussian noise term.
+        n_reads:
+            Integer. Number of reads to draw from the unsampled distribution.
+        dt:         
+            Float. time step size which gets passed to IVP solver
+        downsample: 
+            Integer. fraction of outputs to keep (1/n). By default, keeps all samples. downsample=4 means every 4th 
+            sample is kept, etc. Downsample is deprecated. Simply modify "dt" instead.
 
-        Returns: 
-            The following three dicts (in order):
+        Returns:
+        --------
+        The following three dicts (in order):
 
-                //======================================================\\
-                ||Name:   Sampling:   Normalization:  Number of samples:||
-                ||======================================================||
-                ||X       unsampled   normalized      downsampled       ||
-                ||Y       sampled     normalized      downsampled       ||
-                ||Z       unsampled   unnormalized    full              ||
-                \\======================================================//
-            
-            Each X/Y/Z dict contains (node, timecourse) pairs. The timecourse is a numpy array with shape (number of 
-            time points, node size).
+            //======================================================\\
+            ||Name:   Sampling:   Normalization:  Number of samples:||
+            ||======================================================||
+            ||X       unsampled   normalized      downsampled       ||
+            ||Y       sampled     normalized      downsampled       ||
+            ||Z       unsampled   unnormalized    full              ||
+            \\======================================================//
+        
+        Each X/Y/Z dict contains (node, timecourse) pairs. The timecourse is a numpy array with shape (number of time 
+        points, node size).
 
         Raises:
-            TODO
+        -------
+        TODO
         """
 
         def _grad_fn(
@@ -840,44 +874,48 @@ class OmicsGenerator:
         **generate_args) -> (list, list, list):
         
         """
-        Generates several timecourse of synthetic data. 
+        Generates several timecourses of synthetic data. 
 
         This is essentially a wrapper around a loop of generate() calls, with the added element of reinitializing 
         individuals. The extinct_fraction parameter gives some degree of control over re-initialization.
         
         Args:
-            n:
-                Integer. Number of individuals for whom to generate synthetic data timecourses.
-            extinct_fraction:
-                Float in [0, 1) range. Fraction of abundances that should be extinct for each individual.
+        -----
+        n:
+            Integer. Number of individuals for whom to generate synthetic data timecourses.
+        extinct_fraction:
+            Float in [0, 1) range. Fraction of abundances that should be extinct for each individual.
 
         Additional args (same as generate()):
-            noise_var:   
-                Float. variance parameter for gaussian noise term.
-            n_reads:
-                Integer. Number of reads to draw from the unsampled distribution.
-            dt:         
-                Float. time step size which gets passed to IVP solver
-            downsample: 
-                Integer. fraction of outputs to keep (1/n). By default, keeps all samples. downsample=4 means every 4th 
-                sample is kept, etc. Downsample is deprecated. Simply modify "dt" instead.
+        -------------------------------------
+        noise_var:   
+            Float. variance parameter for gaussian noise term.
+        n_reads:
+            Integer. Number of reads to draw from the unsampled distribution.
+        dt:         
+            Float. time step size which gets passed to IVP solver
+        downsample: 
+            Integer. fraction of outputs to keep (1/n). By default, keeps all samples. downsample=4 means every 4th 
+            sample is kept, etc. Downsample is deprecated. Simply modify "dt" instead.
 
-        Returns: 
-            The following three arrays (in order):
-            
-                //======================================================\\
-                ||Name:   Sampling:   Normalization:  Number of samples:||
-                ||======================================================||
-                ||X       unsampled   normalized      downsampled       ||
-                ||Y       sampled     normalized      downsampled       ||
-                ||Z       unsampled   unnormalized    full              ||
-                \\======================================================//
-            
-            Each X/Y/Z array contains n dicts, each of which contains (node, timecourse) pairs. The timecourse is a 
-            numpy array with shape (number of time points, node size).
+        Returns:
+        --------
+        The following three arrays (in order):
+        
+            //======================================================\\
+            ||Name:   Sampling:   Normalization:  Number of samples:||
+            ||======================================================||
+            ||X       unsampled   normalized      downsampled       ||
+            ||Y       sampled     normalized      downsampled       ||
+            ||Z       unsampled   unnormalized    full              ||
+            \\======================================================//
+        
+        Each X/Y/Z array contains n dicts, each of which contains (node, timecourse) pairs. The timecourse is a numpy 
+        array with shape (number of time points, node size).
 
         Raises:
-            TODO
+        -------
+        TODO
         """
 
         # Initialize:
@@ -904,7 +942,7 @@ class OmicsGenerator:
 
         return out_X, out_Y, out_Z
 
-    def allesina_tang_normal_matrix(
+    def _allesina_tang_normal_matrix(
         self, 
         n : int, 
         C : float, 
@@ -918,34 +956,38 @@ class OmicsGenerator:
         Inspired by https://stefanoallesina.github.io/Sao_Paulo_School/intro.html#multi-species-dynamics.
 
         How this works:
-            1. Creates covariance matrix has the following form:
-                1   rho rho  ...
-                rho 1   rho  ...
-                rho rho 1    ...
-                ... (you get the idea)
-            2. Draws multivariate normal pairs from this covariance matrix
-            3. Populates non-diagonal entries of matrix with drawn pairs
-            4. Symmetrically sparsifies matrix, keeping only ~C% of entries
-            5. Sets diagonals of matrix to -d
+        ---------------
+        1. Creates covariance matrix has the following form:
+            1   rho rho  ...
+            rho 1   rho  ...
+            rho rho 1    ...
+            ... (you get the idea)
+        2. Draws multivariate normal pairs from this covariance matrix
+        3. Populates non-diagonal entries of matrix with drawn pairs
+        4. Symmetrically sparsifies matrix, keeping only ~C% of entries
+        5. Sets diagonals of matrix to -d
 
         Args:
-            n:
-                Integer. Number of rows/columns in square matrix.
-            C:
-                Float in (0,1]: Sparsity parameter. Higher C = less sparse.
-            d:
-                Float. Negative self-interaction size.
-            sigma:
-                Float. Variance used to generate multivariate normal covariance matrix.
-            rho: 
-                Float in [-1, 1]. Correlation term of covariance matrix. Higher rho = positive connectance = mutualism = 
-                harder to stabilize. Lower rho = predator-prey--type relationships = easier to stabilize.
+        -----
+        n:
+            Integer. Number of rows/columns in square matrix.
+        C:
+            Float in (0,1]: Sparsity parameter. Higher C = less sparse.
+        d:
+            Float. Negative self-interaction size.
+        sigma:
+            Float. Variance used to generate multivariate normal covariance matrix.
+        rho: 
+            Float in [-1, 1]. Correlation term of covariance matrix. Higher rho = positive connectance = mutualism = 
+            harder to stabilize. Lower rho = predator-prey--type relationships = easier to stabilize.
         
         Returns:
-            A matrix M that can be used as an interaction matrix.
+        --------
+        A matrix M that can be used as an interaction matrix.
         
         Raises:
-            None (fails silently).
+        -------
+        None (fails silently).
         """
 
         # sample coefficients
@@ -972,7 +1014,7 @@ class OmicsGenerator:
 
         return M
     
-    def set_interactions(
+    def _set_interactions(
         self,
         C : float = 0.5, 
         d : float = 5, 
@@ -983,28 +1025,31 @@ class OmicsGenerator:
         Sets all interaction matrices from one big AT-normal matrix
 
         Args:
-            C:
-                Float in (0,1]: Sparsity parameter. Higher C = less sparse.
-            d:
-                Float. Negative self-interaction size.
-            sigma:
-                Float. Variance used to generate multivariate normal covariance matrix.
-            rho: 
-                Float in [-1, 1]. Correlation term of covariance matrix. Higher rho = positive connectance = mutualism = 
-                harder to stabilize. Lower rho = predator-prey--type relationships = easier to stabilize.
+        -----
+        C:
+            Float in (0,1]: Sparsity parameter. Higher C = less sparse.
+        d:
+            Float. Negative self-interaction size.
+        sigma:
+            Float. Variance used to generate multivariate normal covariance matrix.
+        rho: 
+            Float in [-1, 1]. Correlation term of covariance matrix. Higher rho = positive connectance = mutualism = 
+            harder to stabilize. Lower rho = predator-prey--type relationships = easier to stabilize.
         
         Returns:
-            None (modifies generator in place).
+        --------
+        None (modifies generator in place).
         
         Raises:
-            None (fails silently).
+        -------
+        None (fails silently).
         """
 
         # Generate master matrix
         sizes = [node.size for node in self.nodes]
         n = np.sum(sizes)
         n_nodes = len(sizes)
-        m0 = self.allesina_tang_normal_matrix(n, C, d, sigma, rho)
+        m0 = self._allesina_tang_normal_matrix(n, C, d, sigma, rho)
 
         # Carve up master matrix
         i = 0 # row
@@ -1027,13 +1072,25 @@ class OmicsGenerator:
 
         return None
     
-    def init_full(self) -> None:
+    def _init_full(self) -> None:
 
         """
         A fully random initialization of all generator parameters.
+
+        Args:
+        -----
+        None
+
+        Returns:
+        --------
+        None (modifies generator in place)
+
+        Raises:
+        -------
+        None
         """
 
-        self.set_interactions()
+        self._set_interactions()
         for node in self.nodes:
             self.set_initial_value(
                 node.name, 
@@ -1046,15 +1103,7 @@ class OmicsGenerator:
             )
         
         return None
-    
-    def copy(self) -> None:
 
-        """
-        Deep copy of generator.
-        """
-
-        return deepcopy(self)
-    
     def case_control(
         self,
         participants : int, 
@@ -1063,36 +1112,39 @@ class OmicsGenerator:
         effect_size : float, 
         **generate_args) -> (list, list, list, list, list, list):
         """
-        Generates case and control data.
+        Generates synthetic case and control timecourses.
 
         Args:
-            participants:
-                Integer. The total number of participants in the study.
-            case_frac:
-                Float in [0,1]. Fraction of total participants belonging to the case group.
-            node_name:
-                String. Name of node to which the intervention is applied.
-            effect_size:
-                Float. Magnitude of intervention.
-            **kwargs:
-                Arguments that get passed to generate_multiple().
+        -----
+        participants:
+            Integer. The total number of participants in the study.
+        case_frac:
+            Float in [0,1]. Fraction of total participants belonging to the case group.
+        node_name:
+            String. Name of node to which the intervention is applied.
+        effect_size:
+            Float. Magnitude of intervention.
+        **kwargs:
+            Arguments that get passed to generate_multiple().
         
         Returns:
-            X_control:
-                X-list like generate_multiple() for control group.
-            Y_control:
-                Y-list like generate_multiple() for control group.
-            Z_control:
-                Z-list like generate_multiple() for control group.
-            X_case:
-                X-list like generate_multiple() for case group.
-            Y_case:
-                Y-list like generate_multiple() for case group.
-            Z_case:
-                Z-list like generate_multiple() for case group.
+        --------
+        X_control:
+            X-list like generate_multiple() for control group.
+        Y_control:
+            Y-list like generate_multiple() for control group.
+        Z_control:
+            Z-list like generate_multiple() for control group.
+        X_case:
+            X-list like generate_multiple() for case group.
+        Y_case:
+            Y-list like generate_multiple() for case group.
+        Z_case:
+            Z-list like generate_multiple() for case group.
         
         Raises:
-            TODO
+        -------
+        TODO
         """
 
         # inferred settings
@@ -1115,6 +1167,26 @@ class OmicsGenerator:
         x_case, y_case, z_case = case_gen.generate_multiple(n_cases, **generate_args)
 
         return x_control, y_control, z_control, x_case, y_case, z_case
+
+    def copy(self) -> None:
+
+        """
+        Makes a deep copy of generator.
+
+        Args:
+        -----
+        None
+
+        Returns:
+        --------
+        OmicsGenerator copy
+
+        Raises:
+        -------
+        None
+        """
+
+        return deepcopy(self)
 
     def __str__(self):
         # TODO: Rewrite this more cleanly with f-strings

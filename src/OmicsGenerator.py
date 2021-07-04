@@ -23,7 +23,7 @@ class OmicsGenerator:
         node_sizes : list = [],
         discard_first : int = 0,
         init_full : bool = False,
-        silent : bool = False
+        silent : bool = False,
         **kwargs) -> None:
 
         """

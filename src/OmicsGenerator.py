@@ -23,7 +23,8 @@ class OmicsGenerator:
         node_sizes : list = [],
         discard_first : int = 0,
         init_full : bool = False,
-        silent : bool = False) -> None:
+        silent : bool = False
+        **kwargs) -> None:
 
         """
         Initializes generator.
@@ -44,6 +45,8 @@ class OmicsGenerator:
             Boolean. If True, initializes all interactions, growth rates,and initial abundances at random.
         silent:
             Boolean. If True, suppresses all print statements.
+        **kwargs:
+            C, d, sigma, rho for AT-Normal matrix
 
         Returns:
         --------
@@ -71,7 +74,7 @@ class OmicsGenerator:
             self.add_node(node_name, size)
         
         if init_full:
-            self._init_full()
+            self._init_full(**kwargs)
 
         if self._silent == False:
             print("Initialized")
@@ -1072,14 +1075,17 @@ class OmicsGenerator:
 
         return None
     
-    def _init_full(self) -> None:
+    def _init_full(
+        dist : None = np.random.exponential,
+        **kwargs) -> None:
 
         """
         A fully random initialization of all generator parameters.
 
         Args:
         -----
-        None
+        dist:
+            A function to draw initial distributions (e.g. np.random.exponential, np.random.rand, etc)
 
         Returns:
         --------
@@ -1090,7 +1096,7 @@ class OmicsGenerator:
         None
         """
 
-        self._set_interactions()
+        self._set_interactions(**kwargs)
         for node in self.nodes:
             self.set_initial_value(
                 node.name, 

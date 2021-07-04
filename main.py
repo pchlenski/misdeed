@@ -1,4 +1,5 @@
 from src.OmicsGenerator import OmicsGenerator
+from src.visualization import plot_timecourse
 import numpy as np
 
 gen = OmicsGenerator(100, ['a', 'b'], [100, 25], init_full=True)

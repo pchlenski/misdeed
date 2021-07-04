@@ -1076,6 +1076,7 @@ class OmicsGenerator:
         return None
     
     def _init_full(
+        self,
         dist : None = np.random.exponential,
         **kwargs) -> None:
 

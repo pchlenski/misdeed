@@ -3,7 +3,6 @@ from scipy.integrate import solve_ivp
 from copy import deepcopy
 
 class OmicsGenerator:
-
     """
     Handles all omics generation.
 
@@ -14,6 +13,33 @@ class OmicsGenerator:
     -----------
     nodes:
         List of nodes.
+
+    Args:
+    -----
+    time_points:
+        Integer. How many total time points to generate. Not to be confused with downsampling coefficient (applied 
+        later).
+    nodes:
+        List of strings. (Unique) node names for each node.
+    node_sizes:
+        List of ints. Node sizes for each node.
+    discard_first:
+        Integer. How many initial time points to discard. Setting higher discard_first values generally ensures 
+        samples closer to equilibrium.
+    init_full:
+        Boolean. If True, initializes all interactions, growth rates,and initial abundances at random.
+    silent:
+        Boolean. If True, suppresses all print statements.
+    **kwargs:
+        C, d, sigma, rho for AT-Normal matrix
+
+    Returns:
+    --------
+    OmicsGenerator object.
+    
+    Raises:
+    -------
+    TODO
     """
 
     def __init__(
@@ -25,36 +51,8 @@ class OmicsGenerator:
         init_full : bool = False,
         silent : bool = False,
         **kwargs) -> None:
-
         """
-        Initializes generator.
-
-        Args:
-        -----
-        time_points:
-            Integer. How many total time points to generate. Not to be confused with downsampling coefficient (applied 
-            later).
-        nodes:
-            List of strings. (Unique) node names for each node.
-        node_sizes:
-            List of ints. Node sizes for each node.
-        discard_first:
-            Integer. How many initial time points to discard. Setting higher discard_first values generally ensures 
-            samples closer to equilibrium.
-        init_full:
-            Boolean. If True, initializes all interactions, growth rates,and initial abundances at random.
-        silent:
-            Boolean. If True, suppresses all print statements.
-        **kwargs:
-            C, d, sigma, rho for AT-Normal matrix
-
-        Returns:
-        --------
-        OmicsGenerator object.
-        
-        Raises:
-        -------
-        TODO
+        Initializes generator. See docstring for class.
         """
 
         if len(nodes) != len(node_sizes):
@@ -97,6 +95,31 @@ class OmicsGenerator:
             another node. Maintained by self.add_interaction().
         interventions: 
             A list of interventions which affect this node. Maintained by self.add_intervention().
+
+        Args:
+        -----
+        name:
+            String. The node name. Must be unique.
+        size:
+            Integer: How many elements does this node have?
+        initial_value:
+            A vector of initial abundances for node elements. Length must be equal to size. Generally not called 
+            on initialization - use self.add_initial_value() instead.
+        growth_rates:
+            Intrinsic growth/death rates for node elements. Length must be equal to size. Generally not called on 
+            initialization - use self.add_initial_value() with 'growth_rate = True' instead.
+        log_noise:
+            Boolean. If True, noise will be added to log-relative abundances. True by default.
+        verbose:
+            Boolean. If False, suppresses print statements.
+
+        Returns:
+        --------
+        _OmicsNode object.
+
+        Raises:
+        -------
+        None (fails silently, use add_node() instead.)
         """
 
         def __init__(
@@ -109,32 +132,7 @@ class OmicsGenerator:
             verbose : bool = True) -> None:
 
             """
-            Initializes node.
-
-            Args:
-            -----
-            name:
-                String. The node name. Must be unique.
-            size:
-                Integer: How many elements does this node have?
-            initial_value:
-                A vector of initial abundances for node elements. Length must be equal to size. Generally not called 
-                on initialization - use self.add_initial_value() instead.
-            growth_rates:
-                Intrinsic growth/death rates for node elements. Length must be equal to size. Generally not called on 
-                initialization - use self.add_initial_value() with 'growth_rate = True' instead.
-            log_noise:
-                Boolean. If True, noise will be added to log-relative abundances. True by default.
-            verbose:
-                Boolean. If False, suppresses print statements.
-
-            Returns:
-            --------
-            _OmicsNode object.
-
-            Raises:
-            -------
-            None (fails silently, use add_node() instead.)
+            Initializes node. See docstring for class.
             """
             
             self.name = name
@@ -155,7 +153,6 @@ class OmicsGenerator:
             return f"{self.name}\t{self.size}"
 
     class _OmicsInteraction:
-
         """
         PRIVATE METHOD. Call with self.add_interaction() instead.
 
@@ -168,6 +165,30 @@ class OmicsGenerator:
             Number of rows (e.g. taxa) in matrix.
         ncols:
             Number of columns (e.g. metabolites) in matrix.
+
+        Args:
+        -----
+        name:
+            String. A name for this interaction. Must be unique.
+        outbound_node:
+            Node from which the edge originates
+        inbound_node:
+            Node at which the edge terminates
+        matrix:
+            A matrix-type object with interactions
+        lag:
+            Integer. How much delay to put into dependencies. For instance, a lag of 1 on an interaction means we 
+            compute Ax_t = y_(t+1)
+        verbose:
+            Boolean. If False, suppresses print statements.
+        
+        Returns:
+        --------
+        _OmicsInteraction object.
+
+        Raises:
+        -------
+        None (fails silently, use add_interaction() instead).
         """
 
         def __init__(
@@ -178,33 +199,8 @@ class OmicsGenerator:
             matrix : np.ndarray, 
             lag : int, 
             verbose : bool = True) -> None:
-
             """
-            Initializes interaction.
-
-            Args:
-            -----
-            name:
-                String. A name for this interaction. Must be unique.
-            outbound_node:
-                Node from which the edge originates
-            inbound_node:
-                Node at which the edge terminates
-            matrix:
-                A matrix-type object with interactions
-            lag:
-                Integer. How much delay to put into dependencies. For instance, a lag of 1 on an interaction means we 
-                compute Ax_t = y_(t+1)
-            verbose:
-                Boolean. If False, suppresses print statements.
-            
-            Returns:
-            --------
-            _OmicsInteraction object.
-
-            Raises:
-            -------
-            None (fails silently, use add_interaction() instead).
+            Initializes interaction. See docstring for class.
             """
 
             self.name = name
@@ -224,12 +220,35 @@ class OmicsGenerator:
             return f"{self.name}:\t({self.outbound_node.name})-->({self.inbound_node.name})\tLag: {self.lag}"
 
     class _OmicsIntervention:
-
         """
         PRIVATE METHOD. Call with self.add_intervention() instead.
 
         A class for omics interventions. This has the general form of an n-length matrix which describes the reactions 
         of some set (e.g. taxa) to this particular intervention.
+
+        Args:
+        -----
+        name:
+            String. A name for our intervention. Only used for printing and other bookkeeping.
+        vector:
+            A vector-type object with reactions to the intervention.
+        node_name:
+            String. Name of node affected by this intervention/matrix.
+        U:
+            An indicator vector which is 1 for time points when the intervention is active, 0 otherwise.
+        affects_abundance:  
+            Boolean. If True, intervention vector will be applied directly to the abundance vector rather than 
+            growth rates.
+        verbose:
+            Boolean. If False, suppresses print statements.
+        
+        Returns:
+        --------
+        _OmicsIntevention object.
+        
+        Raises:
+        -------
+        None (fails silently, use add_intervention() instead).
         """
 
         def __init__(
@@ -242,31 +261,7 @@ class OmicsGenerator:
             verbose : bool = True) -> None:
 
             """
-            Initializes an intervention.
-
-            Args:
-            -----
-            name:
-                String. A name for our intervention. Only used for printing and other bookkeeping.
-            vector:
-                A vector-type object with reactions to the intervention.
-            node_name:
-                String. Name of node affected by this intervention/matrix.
-            U:
-                An indicator vector which is 1 for time points when the intervention is active, 0 otherwise.
-            affects_abundance:  
-                Boolean. If True, intervention vector will be applied directly to the abundance vector rather than 
-                growth rates.
-            verbose:
-                Boolean. If False, suppresses print statements.
-            
-            Returns:
-            --------
-            _OmicsIntevention object.
-            
-            Raises:
-            -------
-            None (fails silently, use add_intervention() instead).
+            Initializes an intervention. See docstring for class.
             """
 
             self.name = name
@@ -294,7 +289,6 @@ class OmicsGenerator:
         growth_rates : np.ndarray = None, 
         log_noise : bool = True, 
         verbose : bool = True) -> None:
-
         """
         Adds nodes to generator object.
 
@@ -353,7 +347,7 @@ class OmicsGenerator:
         self._namespace.add(name)
 
         return None
-    
+
     def add_interaction(
         self, 
         name : str, 
@@ -362,7 +356,6 @@ class OmicsGenerator:
         matrix : np.ndarray, 
         lag : int = 0, 
         verbose : bool = True) -> None:
-
         """
         Adds interactions to generator object.
 
@@ -446,7 +439,6 @@ class OmicsGenerator:
         start : int = None, 
         end : int = None, 
         verbose : bool = True) -> None:
-
         """
         Adds an intervention to generator.
 
@@ -537,7 +529,6 @@ class OmicsGenerator:
         values : np.ndarray, 
         growth_rate : bool = False, 
         verbose : bool = True) -> None:
-
         """
         Sets a node value or growth rate.
 
@@ -587,7 +578,6 @@ class OmicsGenerator:
         self, 
         name : str, 
         type : str in ["node", "interaction", "intervention"] = None) -> "generator element":
-
         """
         Gets a (node/interaction/intervention) by name.
 
@@ -628,7 +618,6 @@ class OmicsGenerator:
         self, 
         name : str, 
         verbose : bool = True) -> None:
-
         """
         Removes a node, intervention, or interaction from the generator by name.
 
@@ -698,7 +687,6 @@ class OmicsGenerator:
         n_reads : int = 1e5, 
         dt : float = 1e-2, 
         downsample : int = 1) -> (dict, dict, dict):
-
         """
         Generates a single timecourse of synthetic data. 
         
@@ -739,7 +727,6 @@ class OmicsGenerator:
             X : list, 
             growth_rates : np.ndarray, 
             t : int) -> None:
-
             """
             This gets passed to the solver. It's just the vector f used in GLV calculations.
             """
@@ -875,7 +862,6 @@ class OmicsGenerator:
         n : int, 
         extinct_fraction : float = 0, 
         **generate_args) -> (list, list, list):
-        
         """
         Generates several timecourses of synthetic data. 
 
@@ -952,7 +938,6 @@ class OmicsGenerator:
         d : float, 
         sigma : float, 
         rho : float) -> np.ndarray:
-
         """
         Generates an Allesina-Tang normal matrix.
 
@@ -1023,7 +1008,6 @@ class OmicsGenerator:
         d : float = 5, 
         sigma : float = 1, 
         rho : float = -0.4) -> None:
-
         """
         Sets all interaction matrices from one big AT-normal matrix
 
@@ -1079,7 +1063,6 @@ class OmicsGenerator:
         self,
         dist : None = np.random.exponential,
         **kwargs) -> None:
-
         """
         A fully random initialization of all generator parameters.
 
@@ -1176,7 +1159,6 @@ class OmicsGenerator:
         return x_control, y_control, z_control, x_case, y_case, z_case
 
     def copy(self) -> None:
-
         """
         Makes a deep copy of generator.
 

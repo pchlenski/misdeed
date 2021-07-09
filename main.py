@@ -1,5 +1,6 @@
 from src.OmicsGenerator import OmicsGenerator
 from src.visualization import plot_timecourse
+from src.inference import infer_glv_params
 import numpy as np
 
 gen = OmicsGenerator(100, ['a', 'b'], [100, 25], init_full=True)
@@ -48,5 +49,20 @@ gen.add_intervention(
     end=200
 )
 
-x, y, z = gen.generate()
-plot_timecourse(y)
+dt = 1e-2
+x, y, z = gen.generate(dt=dt)
+# plot_timecourse(y)
+
+u1 = gen.get('diet1').U
+u2 = gen.get('diet2').U
+interventions = np.stack((u1, u2), axis=0)
+m, u, e = infer_glv_params(
+    z['mgx'], 
+    interventions,
+    interaction_reg=10,
+    growth_reg=15,
+    intervention_reg=20,
+    timestep=dt
+)
+
+print(m)

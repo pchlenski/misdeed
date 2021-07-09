@@ -62,7 +62,7 @@ m, u, e = infer_glv_params(
     interaction_reg=10,
     growth_reg=15,
     intervention_reg=20,
-    timestep=dt
+    dt=dt
 )
 
 print(m)

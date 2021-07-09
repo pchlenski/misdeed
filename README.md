@@ -37,13 +37,30 @@ gen = OmicsGenerator(
 
 # add intervention:
 gen.add_intervention(
-    'intervention1',       # intervention name
+    'int1',                # intervention name
     'mgx',                 # apply to 'mgx' node
     10*np.random.rand(15), # set intervention response vector randomly
     start=50,              # start at t=50
     end=100                # go to end
 )
 
+```
+```
+Node 'mgx' initialized
+Node 'mbx' initialized
+Interaction 'mgx->mgx' added
+set m:(mgx)->(mgx):   0:15    0:15
+Interaction 'mgx->mbx' added
+set m:(mgx)->(mbx):   0:15    15:30
+Interaction 'mbx->mgx' added
+set m:(mbx)->(mgx):   15:30    0:15
+Interaction 'mbx->mbx' added
+set m:(mbx)->(mbx):   15:30    15:30
+Added growth rates to node mgx
+Added growth rates to node mgx
+Added growth rates to node mbx
+Added growth rates to node mbx
+Initialized
 ```
 
 ### Single timecourse
@@ -72,7 +89,20 @@ plot_pca([y3_control, y3_case], 'mgx', colors=['red', 'blue'], plot_trajectories
 ![Case-control](./img/ex3.png)
 
 ### Using learned interaction matrices
-TODO
+```python
+# run case-control and plot:
+M, u, E = infer_glv_params(z1['mgx'], gen.get('int1'), dt=1e-2)
+gen2 = OmicsGenerator(100, ['mgx'], [15])
+gen2.add_interaction('M', 'mgx', 'mgx', M)
+gen2.add_intervention('int1', 'mgx', E)
+gen2.set_initial_value('mgx', u, growth_rate=True)
+gen2.set_initial_value('mgx', gen.get('mgx').initial_value) # same init. abundances as gen 1
+
+x4, y4, z4 = gen2.generate(dt=1e-2)
+plot_timecourse(y4['mgx'])
+plt.vlines(50, 0, 1)
+```
+
 
 ## Citation
 TODO

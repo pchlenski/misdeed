@@ -7,7 +7,7 @@ def infer_glv_params(
     interaction_reg : float = 0,
     growth_reg : float = 0,
     intervention_reg : float = 0,
-    timestep : float = 1e-3,
+    dt : float = 1e-3,
     pseudocount : float = 1e-5) -> (np.ndarray, np.ndarray, np.ndarray):
     """
     Infers interaction matrix, growth rates, and intervention responses from absolute abundance data.
@@ -22,7 +22,7 @@ def infer_glv_params(
         Float. L1 penalty for growth rate coefficients.
     intervention_reg:
         Float. L1 penalty for intervention response coefficients.
-    timestep:
+    dt:
         If float: size of (uniform) timestep between observations. Equivalent to "dt" in OmicsGenerator methods.
         If ndarray: vector of time-steps for samples.
     pseudocount:
@@ -66,9 +66,8 @@ def infer_glv_params(
     Y = Y[:,:-1] # drop last time point
 
     # Build up F matrix
-    if type(timestep) is not np.ndarray:
-        dt = np.ones((n_times - 1, 1)) # change in times
-        dt *= timestep # ensure correct scalign. use timestep = dt for the generator
+    if type(dt) is not np.ndarray:
+        dt = dt * np.ones((n_times - 1, 1)) # change in times
     logs = np.log(abundances + pseudocount)
     dx = np.diff(logs, axis=0) # changes in log-abundances
     F = dx / dt

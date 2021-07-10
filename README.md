@@ -88,20 +88,68 @@ plot_pca([y3_control, y3_case], 'mgx', colors=['red', 'blue'], plot_trajectories
 ```
 ![Case-control](./img/ex3.png)
 
-### Using learned interaction matrices
+### Using learned parameters
 ```python
 # run case-control and plot:
-M, u, E = infer_glv_params(z1['mgx'], gen.get('int1'), dt=1e-2)
-gen2 = OmicsGenerator(100, ['mgx'], [15])
-gen2.add_interaction('M', 'mgx', 'mgx', M)
-gen2.add_intervention('int1', 'mgx', E)
-gen2.set_initial_value('mgx', u, growth_rate=True)
-gen2.set_initial_value('mgx', gen.get('mgx').initial_value) # same init. abundances as gen 1
+gen4 = OmicsGenerator(
+    100,                   # 100 time points
+    ['mgx'],               # 1 nodes named 'mgx'
+    [15],                  # 'mgx' has 8 dimensions
+    init_full=True         # set interaction matrices and growth rates randomly
+)
 
-x4, y4, z4 = gen2.generate(dt=1e-2)
-plot_timecourse(y4['mgx'])
-plt.vlines(50, 0, 1)
+# add intervention:
+gen4.add_intervention(
+    'int1',                # intervention name
+    'mgx',                 # apply to 'mgx' node
+    10*np.random.rand(15), # set intervention response vector randomly
+    start=50,              # start at t=50
+    end=100                # go to end
+)
+
+# generate training data
+x4, y4, z4 = gen4.generate(dt=1e-2)
+
+# infer params
+M, u, E = infer_glv_params(
+    z4['mgx'],             # use (latent) absolute abundances
+    gen4.get('int1').U,    # assume intervention indicator is known
+    interaction_reg=100,   # L1 penalty for interaction matrix
+    growth_reg=0,          # L1 penalty for growth rates
+    intervention_reg=0,    # L1 penalty for intervention responses
+    dt=1e-2                # same time-step as generator
+)
+
+# build inferred generator
+gen4_inferred = OmicsGenerator(100, ['mgx'], [15])
+gen4_inferred.add_interaction('M', 'mgx', 'mgx', M)
+gen4_inferred.add_intervention('int1', 'mgx', E.reshape(-1), start=50, end=100)
+gen4_inferred.set_initial_value('mgx', u.reshape(-1), growth_rate=True)
+gen4_inferred.set_initial_value('mgx', gen4.get('mgx').initial_value) # same init. abundances as gen 1
+
+x4_inferred, y4_inferred, z4_inferred = gen4_inferred.generate(dt=1e-2)
+
+# plot both trajectories
+colors = cm.get_cmap('magma', 20)(range(15))
+
+for i in range(15):
+    plt.plot(np.cumsum(z4_inferred['mgx'], axis=1)[:,i], alpha=0.5, c=colors[i])
+    plt.plot(np.cumsum(z4['mgx'], axis=1)[:,i], alpha=0.5, c=colors[i])
 ```
+```
+Node 'mgx' initialized
+Interaction 'mgx->mgx' added
+set m:(mgx)->(mgx):   0:15    0:15
+Added growth rates to node mgx
+Added growth rates to node mgx
+Initialized
+Node 'mgx' initialized
+Initialized
+Interaction 'M' added
+Added growth rates to node mgx
+Added growth rates to node mgx
+```
+![Using learned parameters](./img/ex4.png)
 
 
 ## Citation

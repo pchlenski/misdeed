@@ -45,6 +45,9 @@ def infer_glv_params(
     Intestinal Microbiota" by Stein, Bucci, et al (2013).
     """
 
+    # TODO: add dimension checks, make intervention size handling more robust
+    # TODO: write unit tests
+
     # Set inferred variables
     no_interventions = False
     n_times, n_clades = abundances.shape
@@ -73,6 +76,7 @@ def infer_glv_params(
     F = dx / dt
     F = F.T # need transpose here
 
+    # TODO: test that this works without interventions
     # TODO: test that this works for custom time-steps
 
     # Build up lambda matrix
@@ -85,11 +89,11 @@ def infer_glv_params(
     # Infer M, u, E
     MuE = F @ Y.T @ np.linalg.inv(Y @ Y.T + lambdas)
     inferred_M = MuE[:,:n_clades]
-    inferred_u = MuE[:,n_clades:n_clades+1]
+    inferred_u = MuE[:,n_clades]
     if no_interventions == True:
         inferred_E = np.zeros(n_clades)
     else:
-        inferred_E = MuE[:,-len(interventions)]
+        inferred_E = MuE[:,n_clades+1:]
 
     return inferred_M, inferred_u, inferred_E
 

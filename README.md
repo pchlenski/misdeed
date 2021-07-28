@@ -1,4 +1,6 @@
-# ubiome-sim
+# MiSDEED: \*Mi*\ crobial \*S*\ynthetic \*D*\ata \*E*\ngine for \*E*\xperimental \*D*\esign
+CoPTR: *Co*\ mpute *P*\ eak-to-*T*\ rough *R*\ atio
+
 Microbiome data simulator for power analysis
 
 <!-- generator schematic goes here -->

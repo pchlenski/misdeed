@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from copy import deepcopy
+from uuid import uuid4
+from os import mkdir
 
 class OmicsGenerator:
     """
@@ -127,7 +129,8 @@ class OmicsGenerator:
             name : str, 
             size : int, 
             initial_value : np.ndarray,
-            growth_rates : np.ndarray, 
+            growth_rates : np.ndarray,
+            names : list,
             log_noise : bool, 
             verbose : bool = True) -> None:
 
@@ -143,6 +146,7 @@ class OmicsGenerator:
             self.outbound = {}
             self.inbound = {}
             self.interventions = []
+            self.names = None
 
             if verbose == True:
                 print(f"Node '{name}' initialized")
@@ -287,6 +291,7 @@ class OmicsGenerator:
         size : int, 
         initial_value : np.ndarray = None, 
         growth_rates : np.ndarray = None, 
+        names : list = None,
         log_noise : bool = True, 
         verbose : bool = True) -> None:
         """
@@ -303,6 +308,8 @@ class OmicsGenerator:
             Value of this node at t = 0. Must be same length as node size.
         growth_rates:   
             Element-wise growth/death rates for this node. Must be same length as node size.
+        names:
+            List of names for each node element. Used for printing/saving data.
         log_noise:      
             Boolean. If True, noise will be added to log-relative abundance.If False, noise will be added to relative 
             abundances.
@@ -339,7 +346,8 @@ class OmicsGenerator:
             name,
             size,
             initial_value, 
-            growth_rates, 
+            growth_rates,
+            names,
             log_noise, 
             verbose
         )
@@ -1176,6 +1184,92 @@ class OmicsGenerator:
         """
 
         return deepcopy(self)
+
+    def _save_single(self, 
+        data : "generator output", 
+        path : str = None, 
+        delim : str = "\t", 
+        ext : str = ".tsv") -> None:
+        """
+        Helper function. Saves a single timecourse.
+        """
+        for node in data:
+            data_t = data[node].transpose()
+
+            names = self.get(node).names
+            if names == None:
+                names = [f"{node}_{x}" for x in range(data_t.shape[0])]
+
+            sample_names = [f"S_{x}" for x in range(data_t.shape[1])]
+            header = f"{delim}{delim.join(sample_names)}" # blank top-left cell
+
+            data_joined = np.column_stack([names, data_t])
+
+            np.savetxt(
+                f"{path}{node}.{ext}", 
+                data_joined,
+                fmt="%-12s", 
+                delimiter=delim,
+                header=header,
+            )
+
+
+    def save(self, 
+        data : "generator output", 
+        output_path : str = None,
+        prefix : str = "",
+        delim : str = "\t", 
+        ext : str = "tsv") -> None:
+        """
+        Saves generator outputs (single or multiple timecourses) as a text file/files.
+
+        Args:
+        -----
+        data:
+            An output from the self.generate(), self.generate_multiple(), or self.case_control() method. Expected to be
+            a dict or a list of dicts.
+        path:
+            String. Where to save outputs.
+        prefix:
+            String. Name to append to beginning of filenames.
+        delim:
+            String. Delimiter character.
+        ext:
+            String. Filename extension for saved timecourses.
+
+        Returns:
+        --------
+        None. Saves output to disk (as .tsv files by default)
+
+        Raises:
+        -------
+        TODO
+        """
+
+        # Path handling
+        save_id = uuid4()
+        if output_path == None:
+            output_path = f"./{save_id}"
+        mkdir(output_path)
+        # TODO: better directory handling
+
+        # Multiple outputs
+        if type(data) == list:
+            for i in range(len(data)):
+                individual = data[i]
+                
+                # Check correct nested datatypes
+                if type(individual) != dict:
+                    raise Exception(f"Wrong datatype: submitted list of {type(individual)}, expected list of dicts.")
+
+                mkdir(f"{output_path}/{i}")
+                self._save_single(individual, f"{output_path}/{i}/{prefix}{i}", delim, ext)
+                return None
+
+        # Single output
+        elif type(data) == dict:
+            self._save_single(data, f"{output_path}/{prefix}", delim, ext)
+            return None
 
     def __str__(self):
         # TODO: Rewrite this more cleanly with f-strings

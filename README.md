@@ -4,7 +4,7 @@ Microbiome data simulator for power analysis
 <!-- generator schematic goes here -->
 <!-- example synthetic data goes here -->
 
-The OmicsGenerator class has the following methods:
+The `OmicsGenerator` class has the following public methods:
 * `add_node`: Adds nodes to generator object.
 * `add_interaction`: Adds interactions to generator object.
 * `add_intervention`:  Adds an intervention to generator.
@@ -15,6 +15,11 @@ The OmicsGenerator class has the following methods:
 * `generate_multiple`: Generates several timecourses of synthetic data.
 * `case_control`: Generates synthetic case and control timecourses.
 * `copy`: Makes a deep copy of generator.
+
+In addition, the package contains a number of utility functions:
+* `inference.infer_glv_params`: Infers community matrix, growth rates, and perturbation responses from absolute abundance data.
+* `visualization.plot_timecourse`: Plots timecourses of compositional data.
+* `visualization.plot_pca`: Plots PCA-transformed timecourses.
 
 ## Dependencies
 Dependencies are listed in `requirements.txt` and can be installed using

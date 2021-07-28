@@ -46,9 +46,9 @@ class OmicsGenerator:
 
     def __init__(
         self, 
-        time_points : int, 
         nodes : list = [], 
         node_sizes : list = [],
+        time_points : int = 100, 
         discard_first : int = 0,
         init_full : bool = False,
         silent : bool = False,
@@ -56,6 +56,12 @@ class OmicsGenerator:
         """
         Initializes generator. See docstring for class.
         """
+
+        # Better handling for single-node systems
+        if type(nodes) == str:
+            nodes = [nodes]
+        if type(node_sizes) == int:
+            node_sizes = [node_sizes]
 
         if len(nodes) != len(node_sizes):
             raise Exception(f"Node lengths and node sizes do not match: {len(nodes)} != {len(node_sizes)}")
@@ -717,9 +723,9 @@ class OmicsGenerator:
             //======================================================\\
             ||Name:   Sampling:   Normalization:  Number of samples:||
             ||======================================================||
-            ||X       unsampled   normalized      downsampled       ||
-            ||Y       sampled     normalized      downsampled       ||
-            ||Z       unsampled   unnormalized    full              ||
+            ||X       unsampled   unnormalized    full              ||
+            ||Y       unsampled   normalized      downsampled       ||
+            ||Z       sampled     normalized      downsampled       ||
             \\======================================================//
         
         Each X/Y/Z dict contains (node, timecourse) pairs. The timecourse is a numpy array with shape (number of time 
@@ -764,7 +770,7 @@ class OmicsGenerator:
             intervention_coef = np.zeros(node.size)
             for intervention in node.interventions:
                 if intervention.affects_abundance == False:
-                    intervention_coef += intervention.vector.dot(intervention.U[t])
+                    intervention_coef += intervention.vector @ intervention.U[t]
             
             # Self
             xt = X[node.name][-1]
@@ -775,9 +781,9 @@ class OmicsGenerator:
             return fn
 
         # Initialization steps
-        X = {} # Abundances
-        Y = {} # Final outputs
-        Z = {} # Latent absolute abundances
+        X = {} # Latent absolute abundances
+        Y = {} # Relative abundances/sampling probabilities
+        Z = {} # Sampled abundances
 
         for node in self.nodes:
             X[node.name] = [node.initial_value]
@@ -831,38 +837,41 @@ class OmicsGenerator:
             x = np.array(X[node.name])
 
             # Save latent state
-            x_old = x.copy()
+            y = x.copy()
 
             # Discard first couple elements (ensure values are near attractor)
-            x = x[self._discard_first:]
+            y = y[self._discard_first:]
 
             # Take every nth element
             # Negative coefficient ensures we sample from the end
-            x = x[::-downsample]
+            y = y[::-downsample]
 
             # Need to un-reverse the data now
-            x = x[::-1]
+            y = y[::-1]
 
             # Relative abundances         
-            x = np.apply_along_axis(lambda a: a/sum(a), 1, x)
+            y = np.apply_along_axis(lambda a: a/sum(a), 1, y)
+            # y = y / np.sum(y, axis=1).reshape(-1,1)
+            print(y.sum(axis=1))
 
             # Draw samples
-            y = []
-            for idx in range(x.shape[0]):
+            z = []
+            for idx in range(y.shape[0]):
                 try:
-                    Yt = np.random.multinomial(n_reads, x[idx]) / n_reads
-                    y += [Yt]
+                    Zt = np.random.multinomial(n_reads, y[idx]) / n_reads
+                    z += [Zt]
                 except ValueError:
                     # TODO: circle back and figure out what was breaking this
                     # print("ERROR: check self._weird for more info")
                     # self._weird = X[node.name][idx] # debugging variable
-                    y += [np.zeros(node.size)]
+                    z += [np.zeros(node.size)]
+            print(np.array(z).sum(axis=1))
 
             # Push to output
             X[node.name] = x
-            Y[node.name] = np.array(y)
-            Z[node.name] = x_old
-        
+            Y[node.name] = y
+            Z[node.name] = np.array(z)
+
         return X, Y, Z
 
     def generate_multiple(
@@ -902,9 +911,9 @@ class OmicsGenerator:
             //======================================================\\
             ||Name:   Sampling:   Normalization:  Number of samples:||
             ||======================================================||
-            ||X       unsampled   normalized      downsampled       ||
-            ||Y       sampled     normalized      downsampled       ||
-            ||Z       unsampled   unnormalized    full              ||
+            ||X       unsampled   unnormalized    full              ||
+            ||Y       unsampled   normalized      downsampled       ||
+            ||Z       sampled     normalized      downsampled       ||
             \\======================================================//
         
         Each X/Y/Z array contains n dicts, each of which contains (node, timecourse) pairs. The timecourse is a numpy 
@@ -939,6 +948,7 @@ class OmicsGenerator:
 
         return out_X, out_Y, out_Z
 
+    @staticmethod
     def _allesina_tang_normal_matrix(
         self, 
         n : int, 

@@ -1293,7 +1293,8 @@ class OmicsGenerator:
         # Multiple outputs
         if type(data) == list:
             for i in range(len(data)):
-                print(f"    Saving individual {i} in directory {output_path}/{i}/")
+                if self._silent == False:
+                    print(f"    Saving individual {i} in directory {output_path}/{i}/")
                 individual = data[i]
                 
                 # Check correct nested datatypes

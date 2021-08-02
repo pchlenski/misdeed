@@ -3,6 +3,7 @@ from scipy.integrate import solve_ivp
 from copy import deepcopy
 from uuid import uuid4
 from os import mkdir
+from warnings import warn
 
 class OmicsGenerator:
     """
@@ -46,8 +47,8 @@ class OmicsGenerator:
 
     def __init__(
         self, 
-        nodes : list = [], 
         node_sizes : list = [],
+        nodes : list = [], 
         time_points : int = 100, 
         discard_first : int = 0,
         init_full : bool = False,
@@ -63,7 +64,9 @@ class OmicsGenerator:
         if type(node_sizes) == int:
             node_sizes = [node_sizes]
 
-        if len(nodes) != len(node_sizes):
+        if len(node_sizes) > 0 and len(nodes) == 0:
+            nodes = [f"n{i}" for i in range(len(node_sizes))]
+        elif len(nodes) != len(node_sizes):
             raise Exception(f"Node lengths and node sizes do not match: {len(nodes)} != {len(node_sizes)}")
 
         self._interactions = []
@@ -116,6 +119,8 @@ class OmicsGenerator:
         growth_rates:
             Intrinsic growth/death rates for node elements. Length must be equal to size. Generally not called on 
             initialization - use self.add_initial_value() with 'growth_rate = True' instead.
+        names:
+            List of strings for naming node dimensions.
         log_noise:
             Boolean. If True, noise will be added to log-relative abundances. True by default.
         verbose:
@@ -315,7 +320,7 @@ class OmicsGenerator:
         growth_rates:   
             Element-wise growth/death rates for this node. Must be same length as node size.
         names:
-            List of names for each node element. Used for printing/saving data.
+            Optional. List of names for each node element. Used for printing/saving data.
         log_noise:      
             Boolean. If True, noise will be added to log-relative abundance.If False, noise will be added to relative 
             abundances.
@@ -328,17 +333,27 @@ class OmicsGenerator:
 
         Raises:
         -------
-        TODO
+        NodeDimensionMismatchError:
+            One or more of [initial_value, growth_rates, names] are the wrong size.
         """
 
-        # Check sizes
-        if initial_value != None:
-            if len(initial_value) != size:
-                raise Exception(f"initial_value is wrong size: {len(initial_value)} != {size}")
-        if growth_rates != None:
-            if len(growth_rates) != size:
-                raise Exception(f"growth_rates is wrong size: {len(growth_rates)} != {size}")
-        
+        # Check sizes of inputs agree
+        for param_name in ["initial_value", "growth_rates", "names"]:
+            param = eval(param_name)
+            if param != None and len(param) != size:
+                raise NodeDimensionMismatchError(f"{param_name} is wrong size: {len(param)} != {size}")
+
+        # # PAC: this is the old code to do this
+        # if initial_value != None:
+        #     if len(initial_value) != size:
+        #         raise Exception(f"initial_value is wrong size: {len(initial_value)} != {size}")
+        # if growth_rates != None:
+        #     if len(growth_rates) != size:
+        #         raise Exception(f"growth_rates is wrong size: {len(growth_rates)} != {size}")
+        # if names != None:
+        #     if len(names) != size:
+        #         raise Exception(f"names is wrong size: {len(names)} != {size}")
+
         # Check namespace
         if name in self._namespace:
             raise Exception(f"Name {name} already in use. Please use a unique name")
@@ -584,7 +599,10 @@ class OmicsGenerator:
         
         # Print output
         if verbose == True and self._silent == False:
-            print(f"Added growth rates to node {node_name}")
+            if growth_rate == False:
+                print(f"Added x0 vector to node {node_name}")
+            elif growth_rate == True:
+                print(f"Added growth rates to node {node_name}")
         
         return None
         
@@ -736,6 +754,13 @@ class OmicsGenerator:
         TODO
         """
 
+        # Sanity checks
+        for node in self.nodes:
+            if node.initial_value is None:
+                raise NodeNotInitializedError(f"Node f{node.name} has no x0 vector")
+            if node.growth_rates is None:
+                raise NodeNotInitializedError(f"Node f{node.name} has no growth rate set")
+
         def _grad_fn(
             node : None, 
             X : list, 
@@ -770,7 +795,7 @@ class OmicsGenerator:
             intervention_coef = np.zeros(node.size)
             for intervention in node.interventions:
                 if intervention.affects_abundance == False:
-                    intervention_coef += intervention.vector @ intervention.U[t]
+                    intervention_coef += intervention.vector.dot(intervention.U[t])
             
             # Self
             xt = X[node.name][-1]
@@ -852,7 +877,6 @@ class OmicsGenerator:
             # Relative abundances         
             y = np.apply_along_axis(lambda a: a/sum(a), 1, y)
             # y = y / np.sum(y, axis=1).reshape(-1,1)
-            print(y.sum(axis=1))
 
             # Draw samples
             z = []
@@ -865,7 +889,6 @@ class OmicsGenerator:
                     # print("ERROR: check self._weird for more info")
                     # self._weird = X[node.name][idx] # debugging variable
                     z += [np.zeros(node.size)]
-            print(np.array(z).sum(axis=1))
 
             # Push to output
             X[node.name] = x
@@ -948,7 +971,6 @@ class OmicsGenerator:
 
         return out_X, out_Y, out_Z
 
-    @staticmethod
     def _allesina_tang_normal_matrix(
         self, 
         n : int, 
@@ -1165,10 +1187,11 @@ class OmicsGenerator:
         # get case values
         case_gen = self.copy()
         node_size = self.get(node_name).size
+
         case_gen.add_intervention(
-            'CASE', 
-            node_name, 
-            effect_size * np.random.rand(node_size), 
+            name='CASE', 
+            node_name=node_name, 
+            vector=effect_size * (0.5-np.random.rand(node_size)), 
             start=0, 
             end=self._time_points
         )
@@ -1223,10 +1246,12 @@ class OmicsGenerator:
                 header=header,
             )
 
+        return None
+
 
     def save(self, 
         data : "generator output", 
-        output_path : str = None,
+        output_path : str = ".",
         prefix : str = "",
         delim : str = "\t", 
         ext : str = "tsv") -> None:
@@ -1260,12 +1285,15 @@ class OmicsGenerator:
         save_id = uuid4()
         if output_path == None:
             output_path = f"./{save_id}"
-        mkdir(output_path)
-        # TODO: better directory handling
+        try:
+            mkdir(output_path)
+        except FileExistsError:
+            raise SavePathExistsException("f{output_path} already exists.")
 
         # Multiple outputs
         if type(data) == list:
             for i in range(len(data)):
+                print(f"    Saving individual {i} in directory {output_path}/{i}/")
                 individual = data[i]
                 
                 # Check correct nested datatypes
@@ -1274,7 +1302,7 @@ class OmicsGenerator:
 
                 mkdir(f"{output_path}/{i}")
                 self._save_single(individual, f"{output_path}/{i}/{prefix}{i}", delim, ext)
-                return None
+            return None
 
         # Single output
         elif type(data) == dict:

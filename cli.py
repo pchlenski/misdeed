@@ -15,30 +15,9 @@ from src.OmicsGenerator import OmicsGenerator
 
 class options:
 	def __init__(self):
-# 		parser = argparse.ArgumentParser(
-# 			description=f"MiSDEED (v{__version__}): microbiome synthetic data engine for experimental design",
-# 			usage="""misdeed [options] output_directory
-# mode:	single
-# 	multiple
-# 	casecontrol
-# 	infer
-# """
-# 		)
-
-# 		# help dialogue
-# 		if len(sys.argv[1:]) < 1:
-# 			parser.print_help()
-# 			sys.exit(2)
-
-# 		# interpret command
-# 		# parser.add_argument("command", type=str, help="What command to run.")
-# 		args = parser.parse_args(sys.argv[1:2])
-# 		getattr(self, args.command)()
-# 		# TODO: more helpful error message when command is wrong
-
-	# def single(self):
 		parser = argparse.ArgumentParser(
-			usage = "misdeed [options] node_sizes output_directory"
+			description=f"MiSDEED (v{__version__}): microbiome synthetic data engine for experimental design",
+			usage = "misdeed [-h] [-NtDnevrTdciE] [--options] node_sizes output_directory",
 		)
 
 		# Generator params
@@ -51,78 +30,91 @@ class options:
 			help="Directory in which to store synthetic data"
 		)
 		parser.add_argument(
-			"--node_names",
+			"-N", "--node_names",
 			default=None,
+			metavar="",
 			help="Names for each node, separated by commas. If set, must match node_sizes in length."
 		)
 		parser.add_argument(
-			"--time_points", "-t",
+			"-t", "--time_points",
 			type=int,
 			default=100,
+			metavar="",
 			help="Number of time points to generate."
 		)
 		parser.add_argument(
-			"--discard_first",
+			"-D", "--discard_first",
 			type=int,
 			default=0,
+			metavar="",
 			help="Number of time points to generate and discard at initialization."
 		)
 
 		# Simulation params
 		parser.add_argument(
-			"--n_samples", "-n",
+			"-n", "--n_samples",
 			type=int,
 			default=1,
+			metavar="",
 			help="Number of samples to generate."
 		)
 		parser.add_argument(
-			"--extinct_fraction",
+			"-e", "--extinct_fraction",
 			type=float,
 			default=0,
+			metavar="",
 			help="Fraction of clades to set to zero when generating samples."
 		)
 		parser.add_argument(
-			"--noise_variance", "-v",
+			"-v", "--noise_variance",
 			type=float,
 			default=1e-2,
+			metavar="",
 			help="Variance of biological noise added to system."
 		)
 		parser.add_argument(
-			"--n_reads", "-r",
+			"-r", "--n_reads",
 			type=int,
 			default=1e5,
+			metavar="",
 			help="Number of reads drawn per sample."
 		)
 		parser.add_argument(
-			"--time_step",
+			"-T", "--time_step",
 			type=float,
 			default=1e-2,
+			metavar="",
 			help="Size of time increment between samples."
 		)
 		parser.add_argument(
-			"--downsample", "-d",
+			"-d", "--downsample",
 			type=int,
 			default=1,
+			metavar="",
 			help="Downsampling coefficient (keep every d-th sample)."
 		)
 
 		# Case-control params
 		parser.add_argument(
-			"--case_fraction", "-c",
+			"-c", "--case_fraction",
 			type=float,
 			default=0,
+			metavar="",
 			help="Fraction of samples to generate as cases (default = 0)"
 		)
 		parser.add_argument(
-			"--intervention_node",
+			"-i", "--intervention_node",
 			type=str,
 			default=None,
-			help="Node to which intervention is applied (default = first node)"
+			metavar="",
+			help="Node to which case intervention is applied (default = first node)"
 		)
 		parser.add_argument(
-			"--effect_size",
+			"-E", "--effect_size",
 			type=float,
-			default=0.1
+			default=0.1,
+			metavar="",
+			help="Effect size of case intervention."
 		)
 
 		# if len(sys.argv[2:]) < 2:

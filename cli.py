@@ -191,8 +191,15 @@ class options:
 		# Save outputs
 		print("=========================SAVING========================")
 		print()
+
+		try:
+			os.mkdir(args.output_path)
+		except FileExistsError:
+			print(f"output path {args.output_path} already exists. Creating subdirectories.")
+
 		path = f"{args.output_path}/{uuid4()}"
 		os.mkdir(path)
+
 		if args.case_fraction == 0:
 			gen.save(x, f"{path}/X")
 			gen.save(y, f"{path}/Y")

@@ -4,6 +4,11 @@ Microbiome data simulator for power analysis
 <!-- generator schematic goes here -->
 <!-- example synthetic data goes here -->
 
+# CLI
+
+
+# OmicsGenerator Python package
+
 The `OmicsGenerator` class has the following public methods:
 * `add_node`: Adds nodes to generator object.
 * `add_interaction`: Adds interactions to generator object.
@@ -28,7 +33,7 @@ pip install -r requirements.txt
 ```
 
 ## Examples
-The corresponding jupyter notebook can be found at `notebooks/examples.ipynb`.
+The corresponding Jupyter notebook can be found at `notebooks/examples.ipynb`.
 
 ### Initialize generator
 ```python

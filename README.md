@@ -37,6 +37,7 @@ The `OmicsGenerator` class has the following public methods:
 * `generate_multiple`: Generates several timecourses of synthetic data.
 * `case_control`: Generates synthetic case and control timecourses.
 * `copy`: Makes a deep copy of generator.
+* `save`: Saves generator outputs as plaintext files.
 
 In addition, the package contains a number of utility functions:
 * `inference.infer_glv_params`: Infers community matrix, growth rates, and perturbation responses from absolute abundance data.

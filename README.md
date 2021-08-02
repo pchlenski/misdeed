@@ -4,7 +4,7 @@ Microbiome data simulator for power analysis
 <!-- generator schematic goes here -->
 <!-- example synthetic data goes here -->
 
-# CLI
+# Misdeed command-line interface
 
 ## Example
 ```bash
@@ -16,79 +16,6 @@ pip install -r requirements.txt
 
 # generate 10 trajectories
 ./misdeed -n 10 10,15 ./output
-```
-
-```
-==========================SETUP========================
-
-Node 'n0' initialized
-Node 'n1' initialized
-Interaction 'n0->n0' added
-set m:(n0)->(n0):   0:10    0:10
-Interaction 'n0->n1' added
-set m:(n0)->(n1):   0:10    10:25
-Interaction 'n1->n0' added
-set m:(n1)->(n0):   10:25    0:10
-Interaction 'n1->n1' added
-set m:(n1)->(n1):   10:25    10:25
-Added x0 vector to node n0
-Added growth rates to node n0
-Added x0 vector to node n1
-Added growth rates to node n1
-Initialized
-
-=========================GENERATOR=========================
-
-Time_points:    100
-
-Nodes:
-    n0  10
-    n1  15
-
-Interactions:
-    n0->n0: (n0)-->(n0) Lag: 0
-    n0->n1: (n0)-->(n1) Lag: 0
-    n1->n0: (n1)-->(n0) Lag: 0
-    n1->n1: (n1)-->(n1) Lag: 0
-
-Interventions:
-    
-========================SIMULATION=====================
-
-Generating 10 samples...
-=========================SAVING========================
-
-output path outputs already exists. Creating subdirectories.
-    Saving individual 0 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/X/0/
-    Saving individual 1 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/X/1/
-    Saving individual 2 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/X/2/
-    Saving individual 3 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/X/3/
-    Saving individual 4 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/X/4/
-    Saving individual 5 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/X/5/
-    Saving individual 6 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/X/6/
-    Saving individual 7 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/X/7/
-    Saving individual 8 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/X/8/
-    Saving individual 9 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/X/9/
-    Saving individual 0 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Y/0/
-    Saving individual 1 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Y/1/
-    Saving individual 2 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Y/2/
-    Saving individual 3 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Y/3/
-    Saving individual 4 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Y/4/
-    Saving individual 5 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Y/5/
-    Saving individual 6 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Y/6/
-    Saving individual 7 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Y/7/
-    Saving individual 8 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Y/8/
-    Saving individual 9 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Y/9/
-    Saving individual 0 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Z/0/
-    Saving individual 1 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Z/1/
-    Saving individual 2 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Z/2/
-    Saving individual 3 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Z/3/
-    Saving individual 4 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Z/4/
-    Saving individual 5 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Z/5/
-    Saving individual 6 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Z/6/
-    Saving individual 7 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Z/7/
-    Saving individual 8 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Z/8/
-    Saving individual 9 in directory outputs/b2613894-38db-411a-b74e-4cf86ea2dcc3/Z/9/
 ```
 
 ## Dependencies
@@ -138,23 +65,6 @@ gen.add_intervention(
     end=100                # go to end
 )
 
-```
-```
-Node 'mgx' initialized
-Node 'mbx' initialized
-Interaction 'mgx->mgx' added
-set m:(mgx)->(mgx):   0:15    0:15
-Interaction 'mgx->mbx' added
-set m:(mgx)->(mbx):   0:15    15:30
-Interaction 'mbx->mgx' added
-set m:(mbx)->(mgx):   15:30    0:15
-Interaction 'mbx->mbx' added
-set m:(mbx)->(mbx):   15:30    15:30
-Added growth rates to node mgx
-Added growth rates to node mgx
-Added growth rates to node mbx
-Added growth rates to node mbx
-Initialized
 ```
 
 ### Single timecourse
@@ -229,19 +139,6 @@ colors = cm.get_cmap('magma', 20)(range(15))
 for i in range(15):
     plt.plot(np.cumsum(z4_inferred['mgx'], axis=1)[:,i], alpha=0.5, c=colors[i])
     plt.plot(np.cumsum(z4['mgx'], axis=1)[:,i], alpha=0.5, c=colors[i])
-```
-```
-Node 'mgx' initialized
-Interaction 'mgx->mgx' added
-set m:(mgx)->(mgx):   0:15    0:15
-Added growth rates to node mgx
-Added growth rates to node mgx
-Initialized
-Node 'mgx' initialized
-Initialized
-Interaction 'M' added
-Added growth rates to node mgx
-Added growth rates to node mgx
 ```
 ![Using learned parameters](./img/ex4.png)
 

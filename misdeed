@@ -18,7 +18,7 @@ class options:
 	def __init__(self):
 		parser = argparse.ArgumentParser(
 			description=f"MiSDEED (v{__version__}): microbiome synthetic data engine for experimental design",
-			usage = "misdeed [-h] [-NtDnevrTdciE] [--options] node_sizes output_directory",
+			usage = "misdeed [-h] [-pNtDCPVRnevrTdciE] [--options] node_sizes output_directory",
 		)
 
 		# Generator params
@@ -37,7 +37,8 @@ class options:
 			help="""Path to a directory containing GLV parameters. Directory should have the following naming conventions:
 			directory/[node_name]->[node_name].csv (interaction matrix), 
 			directory/[node_name]_g.csv (growth rates)
-			directory/[node_name]_x0.csv (initial abundances)"""
+			directory/[node_name]_x0.csv (initial abundances). 
+			Mutually exclusive with --connectivity, --self_penalty, --variance, and --correlation."""
 		)
 		parser.add_argument(
 			"-N", "--node_names",
@@ -52,12 +53,38 @@ class options:
 			metavar="",
 			help="Number of time points to generate."
 		)
+
+		# Random matrix params
 		parser.add_argument(
 			"-D", "--discard_first",
 			type=int,
 			default=0,
 			metavar="",
 			help="Number of time points to generate and discard at initialization."
+		)
+		parser.add_argument(
+			"-C", "--connectivity",
+			default=0.5,
+			metavar="",
+			help="Connectivity (1-sparsity) for generating interaction matrix. Mutually exclusive with --parameter_dir."
+		)
+		parser.add_argument(
+			"-P", "--self-penalty",
+			default=None,
+			metavar="",
+			help="Self-penalty for generating interaction matrix. Mutually exclusive with --parameter_dir."
+		)
+		parser.add_argument(
+			"-V", "--variance",
+			default=1,
+			metavar="",
+			help="Variance for multivariate normal distribution for generating interaction matrix. Mutually exclusive with --parameter_dir."
+		)
+		parser.add_argument(
+			"-R", "--correlation",
+			default=-0.4,
+			metavar="",
+			help="Correlation (rho) for multivariate normal distribution for generating interaction matrix. Mutually exclusive with --parameter_dir."
 		)
 
 		# Simulation params
@@ -155,6 +182,10 @@ class options:
 				node_sizes=node_sizes,
 				time_points=args.time_points,
 				discard_first=args.discard_first,
+				C=args.connectivity,
+				d=args.self_penalty,
+				sigma=args.variance,
+				rho=args.correlation,
 				init_full=True
 			)
 

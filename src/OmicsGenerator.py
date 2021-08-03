@@ -757,9 +757,11 @@ class OmicsGenerator:
         # Sanity checks
         for node in self.nodes:
             if node.initial_value is None:
-                raise NodeNotInitializedError(f"Node f{node.name} has no x0 vector")
+                class NodeNotInitializedError(Exception): pass
+                raise NodeNotInitializedError(f"Node '{node.name}' has no x0 vector")
             if node.growth_rates is None:
-                raise NodeNotInitializedError(f"Node f{node.name} has no growth rate set")
+                class NodeNotInitializedError(Exception): pass
+                raise NodeNotInitializedError(f"Node '{node.name}' has no growth rate set")
 
         def _grad_fn(
             node : None, 
@@ -1045,9 +1047,10 @@ class OmicsGenerator:
     def _set_interactions(
         self,
         C : float = 0.5, 
-        d : float = 5, 
+        d : float = None, 
         sigma : float = 1, 
-        rho : float = -0.4) -> None:
+        rho : float = -0.4,
+        revise : bool = True) -> None:
         """
         Sets all interaction matrices from one big AT-normal matrix
 
@@ -1076,6 +1079,11 @@ class OmicsGenerator:
         sizes = [node.size for node in self.nodes]
         n = np.sum(sizes)
         n_nodes = len(sizes)
+
+        # Solve for a stable value of d if d is not provided
+        if d == None:
+            d = sigma * np.sqrt(n * C) + 1
+
         m0 = self._allesina_tang_normal_matrix(n, C, d, sigma, rho)
 
         # Carve up master matrix

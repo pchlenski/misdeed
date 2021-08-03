@@ -9,6 +9,7 @@ import os
 import os.path
 import sys
 from uuid import uuid4
+import numpy as np
 
 from src import __version__
 from src.OmicsGenerator import OmicsGenerator
@@ -28,6 +29,15 @@ class options:
 		parser.add_argument(
 			"output_path",
 			help="Directory in which to store synthetic data"
+		)
+		parser.add_argument(
+			"-p", "--parameter_dir",
+			default=None,
+			metavar="",
+			help="""Path to a directory containing GLV parameters. Directory should have the following naming conventions:
+			directory/[node_name]->[node_name].csv (interaction matrix), 
+			directory/[node_name]_g.csv (growth rates)
+			directory/[node_name]_x0.csv (initial abundances)"""
 		)
 		parser.add_argument(
 			"-N", "--node_names",
@@ -134,19 +144,60 @@ class options:
 		else:
 			node_names = args.node_names.split(",")
 
-		# Path checking
-		# if os.path.isdir(output_path)
-
 		# Set up generator
 		print("==========================SETUP========================")
 		print()
-		gen = OmicsGenerator(
-			nodes=node_names,
-			node_sizes=node_sizes,
-			time_points=args.time_points,
-			discard_first=args.discard_first,
-			init_full=True
-		)
+
+		# Set automatic GLV parameters
+		if args.parameter_dir == None:
+			gen = OmicsGenerator(
+				nodes=node_names,
+				node_sizes=node_sizes,
+				time_points=args.time_points,
+				discard_first=args.discard_first,
+				init_full=True
+			)
+
+		# Read GLV parameters from files
+		else:
+			gen = OmicsGenerator(
+				nodes=node_names,
+				node_sizes=node_sizes,
+				time_points=args.time_points,
+				discard_first=args.discard_first
+			)
+			for filename in os.listdir(args.parameter_dir):
+
+				if not filename.endswith(".tsv") and not filename.endswith(".csv"):
+					pass # Ignore all non-csv files
+
+				elif filename.find("->") != -1:
+					matrix = np.loadtxt(f"{args.parameter_dir}/{filename}")
+					matrix_name = filename.split(".tsv")[0]
+					out_name, in_name = matrix_name.split("->")
+					print(f"Setting matrix '{matrix_name}' from {filename}...")
+					gen.add_interaction(
+						name=matrix_name,
+						outbound_node_name=out_name,
+						inbound_node_name=in_name,
+						matrix=matrix
+					)
+
+				elif filename.endswith("_g.tsv"):
+					g = np.loadtxt(f"{args.parameter_dir}/{filename}")
+					node_name = filename.split("_g.tsv")[0]
+					print(f"Setting growth rates for node '{node_name}' from {filename}...")
+					gen.set_initial_value(node_name, g, growth_rate=True)
+
+				elif filename.endswith("_x0.tsv"):
+					x0 = np.loadtxt(f"{args.parameter_dir}/{filename}")
+					node_name = filename.split("_x0.tsv")[0]
+					print(f"Setting initial abundances for node '{node_name}' from {filename}...")
+					gen.set_initial_value(node_name, x0)
+
+				else:
+					print(f"Skipping over {filename}")
+
 		print(gen)
 
 		print("========================SIMULATION=====================")
@@ -199,6 +250,7 @@ class options:
 
 		path = f"{args.output_path}/{uuid4()}"
 		os.mkdir(path)
+		print(f"Created directory {path}")
 
 		if args.case_fraction == 0:
 			gen.save(x, f"{path}/X")

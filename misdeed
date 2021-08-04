@@ -10,291 +10,376 @@ import os.path
 import sys
 from uuid import uuid4
 import numpy as np
+import matplotlib.pyplot as plt
 
 from src import __version__
 from src.OmicsGenerator import OmicsGenerator
+from src.visualization import plot_timecourse
+from src.visualization import plot_pca
 
 class options:
-	def __init__(self):
-		parser = argparse.ArgumentParser(
-			description=f"MiSDEED (v{__version__}): microbiome synthetic data engine for experimental design",
-			usage = "misdeed [-h] [-pNtDCPVRnevrTdciE] [--options] node_sizes output_directory",
-		)
+    def __init__(self):
+        parser = argparse.ArgumentParser(
+            description=f"MiSDEED (v{__version__}): microbiome synthetic data engine for experimental design",
+            usage = "misdeed [-h] [-iNtDCPVRnevrTdciE] [--options] node_sizes output_directory",
+        )
 
-		# Generator params
-		parser.add_argument(
-			"node_sizes",
-			help="Number of dimensions for each node, separated by commas"
-		)
-		parser.add_argument(
-			"output_path",
-			help="Directory in which to store synthetic data"
-		)
-		parser.add_argument(
-			"-p", "--parameter_dir",
-			default=None,
-			metavar="",
-			help="""Path to a directory containing GLV parameters. Directory should have the following naming conventions:
-			directory/[node_name]->[node_name].csv (interaction matrix), 
-			directory/[node_name]_g.csv (growth rates)
-			directory/[node_name]_x0.csv (initial abundances). 
-			Mutually exclusive with --connectivity, --self_penalty, --variance, and --correlation."""
-		)
-		parser.add_argument(
-			"-N", "--node_names",
-			default=None,
-			metavar="",
-			help="Names for each node, separated by commas. If set, must match node_sizes in length."
-		)
-		parser.add_argument(
-			"-t", "--time_points",
-			type=int,
-			default=100,
-			metavar="",
-			help="Number of time points to generate."
-		)
+        # Generator params
+        parser.add_argument(
+            "node_sizes",
+            help="Number of dimensions for each node, separated by commas"
+        )
+        parser.add_argument(
+            "output_path",
+            help="Directory in which to store synthetic data"
+        )
+        parser.add_argument(
+            "-i", "--parameter_dir",
+            default=None,
+            metavar="",
+            help="""Path to a directory containing GLV parameters. Directory should have the following naming conventions:
+            directory/[node_name]->[node_name].csv (interaction matrix), 
+            directory/[node_name]_g.csv (growth rates)
+            directory/[node_name]_x0.csv (initial abundances). 
+            Mutually exclusive with --connectivity, --self_penalty, --variance, and --correlation."""
+        )
+        parser.add_argument(
+            "-N", "--node_names",
+            default=None,
+            metavar="",
+            help="Names for each node, separated by commas. If set, must match node_sizes in length."
+        )
+        parser.add_argument(
+            "-t", "--time_points",
+            type=int,
+            default=100,
+            metavar="",
+            help="Number of time points to generate."
+        )
 
-		# Random matrix params
-		parser.add_argument(
-			"-D", "--discard_first",
-			type=int,
-			default=0,
-			metavar="",
-			help="Number of time points to generate and discard at initialization."
-		)
-		parser.add_argument(
-			"-C", "--connectivity",
-			default=0.5,
-			metavar="",
-			help="Connectivity (1-sparsity) for generating interaction matrix. Mutually exclusive with --parameter_dir."
-		)
-		parser.add_argument(
-			"-P", "--self-penalty",
-			default=None,
-			metavar="",
-			help="Self-penalty for generating interaction matrix. Mutually exclusive with --parameter_dir."
-		)
-		parser.add_argument(
-			"-V", "--variance",
-			default=1,
-			metavar="",
-			help="Variance for multivariate normal distribution for generating interaction matrix. Mutually exclusive with --parameter_dir."
-		)
-		parser.add_argument(
-			"-R", "--correlation",
-			default=-0.4,
-			metavar="",
-			help="Correlation (rho) for multivariate normal distribution for generating interaction matrix. Mutually exclusive with --parameter_dir."
-		)
+        # Random matrix params
+        parser.add_argument(
+            "-D", "--discard_first",
+            type=int,
+            default=0,
+            metavar="",
+            help="Number of time points to generate and discard at initialization."
+        )
+        parser.add_argument(
+            "-C", "--connectivity",
+            type=float,
+            default=0.5,
+            metavar="",
+            help="Connectivity (1-sparsity) for generating interaction matrix. Not used if --parameter_dir is set."
+        )
+        parser.add_argument(
+            "-P", "--self-penalty",
+            type=float,
+            default=None,
+            metavar="",
+            help="Self-penalty for generating interaction matrix. Not used if --parameter_dir is set."
+        )
+        parser.add_argument(
+            "-V", "--variance",
+            type=float,
+            default=1,
+            metavar="",
+            help="Variance for multivariate normal distribution for generating interaction matrix. Not used if --parameter_dir is set."
+        )
+        parser.add_argument(
+            "-R", "--correlation",
+            type=float,
+            default=-0.4,
+            metavar="",
+            help="Correlation (rho) for multivariate normal distribution for generating interaction matrix. Not used if --parameter_dir is set."
+        )
 
-		# Simulation params
-		parser.add_argument(
-			"-n", "--n_samples",
-			type=int,
-			default=1,
-			metavar="",
-			help="Number of samples to generate."
-		)
-		parser.add_argument(
-			"-e", "--extinct_fraction",
-			type=float,
-			default=0,
-			metavar="",
-			help="Fraction of clades to set to zero when generating samples."
-		)
-		parser.add_argument(
-			"-v", "--noise_variance",
-			type=float,
-			default=1e-2,
-			metavar="",
-			help="Variance of biological noise added to system."
-		)
-		parser.add_argument(
-			"-r", "--n_reads",
-			type=int,
-			default=1e5,
-			metavar="",
-			help="Number of reads drawn per sample."
-		)
-		parser.add_argument(
-			"-T", "--time_step",
-			type=float,
-			default=1e-2,
-			metavar="",
-			help="Size of time increment between samples."
-		)
-		parser.add_argument(
-			"-d", "--downsample",
-			type=int,
-			default=1,
-			metavar="",
-			help="Downsampling coefficient (keep every d-th sample)."
-		)
+        # Simulation params
+        parser.add_argument(
+            "-n", "--n_samples",
+            type=int,
+            default=1,
+            metavar="",
+            help="Number of samples to generate."
+        )
+        parser.add_argument(
+            "-e", "--extinct_fraction",
+            type=float,
+            default=0,
+            metavar="",
+            help="Fraction of clades to set to zero when generating samples."
+        )
+        parser.add_argument(
+            "-v", "--noise_variance",
+            type=float,
+            default=1e-2,
+            metavar="",
+            help="Variance of biological noise added to system."
+        )
+        parser.add_argument(
+            "-r", "--n_reads",
+            type=int,
+            default=1e5,
+            metavar="",
+            help="Number of reads drawn per sample."
+        )
+        parser.add_argument(
+            "-T", "--time_step",
+            type=float,
+            default=1e-2,
+            metavar="",
+            help="Size of time increment between samples."
+        )
+        parser.add_argument(
+            "-d", "--downsample",
+            type=int,
+            default=1,
+            metavar="",
+            help="Downsampling coefficient (keep every d-th sample)."
+        )
 
-		# Case-control params
-		parser.add_argument(
-			"-c", "--case_fraction",
-			type=float,
-			default=0,
-			metavar="",
-			help="Fraction of samples to generate as cases (default = 0)"
-		)
-		parser.add_argument(
-			"-i", "--intervention_node",
-			type=str,
-			default=None,
-			metavar="",
-			help="Node to which case intervention is applied (default = first node)"
-		)
-		parser.add_argument(
-			"-E", "--effect_size",
-			type=float,
-			default=0.1,
-			metavar="",
-			help="Effect size of case intervention."
-		)
+        # Case-control params
+        parser.add_argument(
+            "-c", "--case_fraction",
+            type=float,
+            default=0,
+            metavar="",
+            help="Fraction of samples to generate as cases (default = 0)"
+        )
+        parser.add_argument(
+            "-I", "--intervention_node",
+            type=str,
+            default=None,
+            metavar="",
+            help="Node to which case intervention is applied (default = first node)"
+        )
+        parser.add_argument(
+            "-E", "--effect_size",
+            type=float,
+            default=0.1,
+            metavar="",
+            help="Effect size of case intervention."
+        )
 
-		# if len(sys.argv[2:]) < 2:
-		if len(sys.argv[1:]) < 2:
-			parser.print_help()
-			sys.exit(2)
-		# TODO: add arg for matrix
+        # Plotting params
+        parser.add_argument(
+            "-p", "--plot",
+            action="store_true",
+            help="Save plots of timecourses in output directory."
+        )
+        parser.add_argument(
+            "--pca",
+            action="store_true",
+            help="Save PCA plot of all timecourses in output directory"
+        )
 
-		# Process args
-		# args = parser.parse_args(sys.argv[2:])
-		args = parser.parse_args(sys.argv[1:])
-		
-		node_sizes = [int(x) for x in args.node_sizes.split(",")]
+        # Check positional arguments are in place
+        if len(sys.argv[1:]) < 2:
+            parser.print_help()
+            sys.exit(2)
 
-		if args.node_names == None:
-			node_names = []
-		else:
-			node_names = args.node_names.split(",")
+        # Process args
+        args = parser.parse_args(sys.argv[1:])
+        
+        node_sizes = [int(x) for x in args.node_sizes.split(",")]
 
-		# Set up generator
-		print("==========================SETUP========================")
-		print()
+        if args.node_names == None:
+            node_names = []
+        else:
+            node_names = args.node_names.split(",")
 
-		# Set automatic GLV parameters
-		if args.parameter_dir == None:
-			gen = OmicsGenerator(
-				nodes=node_names,
-				node_sizes=node_sizes,
-				time_points=args.time_points,
-				discard_first=args.discard_first,
-				C=args.connectivity,
-				d=args.self_penalty,
-				sigma=args.variance,
-				rho=args.correlation,
-				init_full=True
-			)
+        # Set up generator
+        print("==========================SETUP========================")
+        print()
 
-		# Read GLV parameters from files
-		else:
-			gen = OmicsGenerator(
-				nodes=node_names,
-				node_sizes=node_sizes,
-				time_points=args.time_points,
-				discard_first=args.discard_first
-			)
-			for filename in os.listdir(args.parameter_dir):
+        # Set automatic GLV parameters
+        if args.parameter_dir == None:
+            gen = OmicsGenerator(
+                nodes=node_names,
+                node_sizes=node_sizes,
+                time_points=args.time_points,
+                discard_first=args.discard_first,
+                C=args.connectivity,
+                d=args.self_penalty,
+                sigma=args.variance,
+                rho=args.correlation,
+                init_full=True
+            )
 
-				if not filename.endswith(".tsv") and not filename.endswith(".csv"):
-					pass # Ignore all non-csv files
+        # Read GLV parameters from files
+        else:
+            gen = OmicsGenerator(
+                nodes=node_names,
+                node_sizes=node_sizes,
+                time_points=args.time_points,
+                discard_first=args.discard_first
+            )
+            for filename in os.listdir(args.parameter_dir):
 
-				elif filename.find("->") != -1:
-					matrix = np.loadtxt(f"{args.parameter_dir}/{filename}")
-					matrix_name = filename.split(".tsv")[0]
-					out_name, in_name = matrix_name.split("->")
-					print(f"Setting matrix '{matrix_name}' from {filename}...")
-					gen.add_interaction(
-						name=matrix_name,
-						outbound_node_name=out_name,
-						inbound_node_name=in_name,
-						matrix=matrix
-					)
+                if not filename.endswith(".tsv") and not filename.endswith(".csv"):
+                    pass # Ignore all non-csv files
 
-				elif filename.endswith("_g.tsv"):
-					g = np.loadtxt(f"{args.parameter_dir}/{filename}")
-					node_name = filename.split("_g.tsv")[0]
-					print(f"Setting growth rates for node '{node_name}' from {filename}...")
-					gen.set_initial_value(node_name, g, growth_rate=True)
+                elif filename.find("->") != -1:
+                    matrix = np.loadtxt(f"{args.parameter_dir}/{filename}")
+                    matrix_name = filename.split(".tsv")[0]
+                    out_name, in_name = matrix_name.split("->")
+                    print(f"Setting matrix '{matrix_name}' from {filename}...")
+                    gen.add_interaction(
+                        name=matrix_name,
+                        outbound_node_name=out_name,
+                        inbound_node_name=in_name,
+                        matrix=matrix
+                    )
 
-				elif filename.endswith("_x0.tsv"):
-					x0 = np.loadtxt(f"{args.parameter_dir}/{filename}")
-					node_name = filename.split("_x0.tsv")[0]
-					print(f"Setting initial abundances for node '{node_name}' from {filename}...")
-					gen.set_initial_value(node_name, x0)
+                elif filename.endswith("_g.tsv"):
+                    g = np.loadtxt(f"{args.parameter_dir}/{filename}")
+                    node_name = filename.split("_g.tsv")[0]
+                    print(f"Setting growth rates for node '{node_name}' from {filename}...")
+                    gen.set_initial_value(node_name, g, growth_rate=True)
 
-				else:
-					print(f"Skipping over {filename}")
+                elif filename.endswith("_x0.tsv"):
+                    x0 = np.loadtxt(f"{args.parameter_dir}/{filename}")
+                    node_name = filename.split("_x0.tsv")[0]
+                    print(f"Setting initial abundances for node '{node_name}' from {filename}...")
+                    gen.set_initial_value(node_name, x0)
 
-		print(gen)
+                else:
+                    print(f"Skipping over {filename}")
 
-		print("========================SIMULATION=====================")
-		print()
-		# Run generator
-		if args.n_samples == 1:
-			print(f"Generating single sample...")
-			x,y,z = gen.generate(
-				noise_var=args.noise_variance,
-				n_reads=args.n_reads,
-				dt=args.time_step,
-				downsample=args.downsample
-			)
-		elif args.case_fraction == 0:
-			print(f"Generating {args.n_samples} samples...")
-			x,y,z = gen.generate_multiple(
-				args.n_samples,
-				extinct_fraction=args.extinct_fraction,
-				noise_var=args.noise_variance,
-				n_reads=args.n_reads,
-				dt=args.time_step,
-				downsample=args.downsample
-			)
-		else:
-			print(f"Generating {args.n_samples} samples (case-control)...")
+        print(gen)
 
-			if args.intervention_node == None:
-				args.intervention_node = gen.nodes[0].name 
+        print("========================SIMULATION=====================")
+        print()
+        # Run generator
+        if args.n_samples == 1:
+            print(f"Generating single sample...")
+            x,y,z = gen.generate(
+                noise_var=args.noise_variance,
+                n_reads=args.n_reads,
+                dt=args.time_step,
+                downsample=args.downsample
+            )
+        elif args.case_fraction == 0:
+            print(f"Generating {args.n_samples} samples...")
+            x,y,z = gen.generate_multiple(
+                args.n_samples,
+                extinct_fraction=args.extinct_fraction,
+                noise_var=args.noise_variance,
+                n_reads=args.n_reads,
+                dt=args.time_step,
+                downsample=args.downsample
+            )
+        else:
+            print(f"Generating {args.n_samples} samples (case-control)...")
 
-			x_control,y_control,z_control,x_case,y_case,z_case = gen.case_control(
-				args.n_samples,
-				case_frac=args.case_fraction,
-				node_name=args.intervention_node,
-				effect_size=args.effect_size,
-				extinct_fraction=args.extinct_fraction,
-				noise_var=args.noise_variance,
-				n_reads=args.n_reads,
-				dt=args.time_step,
-				downsample=args.downsample
-			)
+            if args.intervention_node == None:
+                args.intervention_node = gen.nodes[0].name 
 
-		# Save outputs
-		print("=========================SAVING========================")
-		print()
+            x_control,y_control,z_control,x_case,y_case,z_case = gen.case_control(
+                args.n_samples,
+                case_frac=args.case_fraction,
+                node_name=args.intervention_node,
+                effect_size=args.effect_size,
+                extinct_fraction=args.extinct_fraction,
+                noise_var=args.noise_variance,
+                n_reads=args.n_reads,
+                dt=args.time_step,
+                downsample=args.downsample
+            )
 
-		try:
-			os.mkdir(args.output_path)
-		except FileExistsError:
-			print(f"output path {args.output_path} already exists. Creating subdirectories.")
+        # Save outputs
+        print("=========================SAVING========================")
+        print()
 
-		path = f"{args.output_path}/{uuid4()}"
-		os.mkdir(path)
-		print(f"Created directory {path}")
+        try:
+            os.mkdir(args.output_path)
+        except FileExistsError:
+            print(f"output path {args.output_path} already exists. Creating subdirectories.")
 
-		if args.case_fraction == 0:
-			gen.save(x, f"{path}/X")
-			gen.save(y, f"{path}/Y")
-			gen.save(z, f"{path}/Z")
-		else:
-			os.mkdir(f"{path}/control")
-			os.mkdir(f"{path}/case")
-			gen.save(x_control, f"{path}/control/X")
-			gen.save(x_case, f"{path}/case/X")
-			gen.save(y_control, f"{path}/control/Y")
-			gen.save(y_case, f"{path}/case/Y")
-			gen.save(z_control, f"{path}/control/Z")
-			gen.save(z_case, f"{path}/case/Z")
+        path = f"{args.output_path}/{uuid4()}"
+        os.mkdir(path)
+        print(f"Created directory {path}")
+
+        if args.case_fraction == 0:
+            gen.save(x, f"{path}/X")
+            gen.save(y, f"{path}/Y")
+            gen.save(z, f"{path}/Z")
+        else:
+            os.mkdir(f"{path}/control")
+            os.mkdir(f"{path}/case")
+            gen.save(x_control, f"{path}/control/X")
+            gen.save(x_case, f"{path}/case/X")
+            gen.save(y_control, f"{path}/control/Y")
+            gen.save(y_case, f"{path}/case/Y")
+            gen.save(z_control, f"{path}/control/Z")
+            gen.save(z_case, f"{path}/case/Z")
+
+        # Save plots
+        if args.plot == True:
+            print("Plotting timecourses")
+
+            # Single plot case
+            if args.n_samples == 1:
+                os.mkdir(f"{path}/plots")
+                for node in z:
+                    plot = plot_timecourse(z[node])
+                    print(f"\tSaving plot for individual 0, node '{node}' in {path}/plots/0_{node}.png")
+                    plt.savefig(f"{path}/plots/0_{node}")
+
+            # Multiple plot case, no case-control
+            elif args.case_fraction == 0:
+                os.mkdir(f"{path}/plots")
+                for idx in range(len(z)):
+                    sample = z[idx]
+                    for node in sample:
+                        plot = plot_timecourse(sample[node])
+                        plt.title(f"Individual {idx}, node {node}", y=1.0, pad=30)
+                        print(f"\tSaving plot for individual {idx}, node '{node}' in {path}/plots/{idx}_{node}.png")
+                        plt.savefig(f"{path}/plots/{idx}_{node}")
+
+            # Multiple plot case, case-control:
+            else:
+                os.mkdir(f"{path}/case/plots")
+                os.mkdir(f"{path}/control/plots")
+                for idx in range(len(z_control)):
+                    sample = z_control[idx]
+                    for node in sample:
+                        plot = plot_timecourse(sample[node])
+                        plt.title(f"Control: Individual {idx}, node {node}", y=1.0, pad=30)
+                        print(f"\tSaving plot for individual {idx}, node '{node}' in {path}/control/plots/{idx}_{node}.png")
+                        plt.savefig(f"{path}/control/plots/{idx}_{node}")
+                for idx in range(len(z_case)):
+                    sample = z_case[idx]
+                    for node in sample:
+                        plot = plot_timecourse(sample[node])
+                        plt.title(f"Case: Individual {idx}, node {node}", y=1.0, pad=30)
+                        print(f"\tSaving plot for individual {idx}, node '{node}' in {path}/case/plots/{idx}_{node}.png")
+                        plt.savefig(f"{path}/case/plots/{idx}_{node}")
+
+        # Save PCA
+        if args.pca == True:
+            print("Plotting PCA")
+            os.mkdir(f"{path}/pca")
+
+            if args.n_samples == 1:
+                to_plot = [[z]]
+                nodes = z
+            elif args.case_fraction == 0:
+                to_plot = [z]
+                nodes = z[0]
+            else:
+                to_plot = [z_control, z_case]
+                nodes = z_control[0]
+
+            for node in nodes:
+                plot = plot_pca(to_plot, node)
+                print(f"\tSaving PCA for node {node} in {path}/pca/{node}.png")
+                plt.savefig(f"{path}/pca/{node}")
+                plt.cla()
+
+
+
+
+
 
 options()

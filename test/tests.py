@@ -156,13 +156,13 @@ def test_5(
         init_full=True, 
         silent=True
     )
-    x1, y1, z1 = gen1.generate_multiple(n, noise_var=nv, dt=dt)
+    z1, x1, y1 = gen1.generate_multiple(n, noise_var=nv, dt=dt)
     
     gen1.add_intervention('c', 'a', np.random.rand(a_size), start=0, end=t)
-    x2, y2, z2 = gen1.generate_multiple(n, noise_var=nv, dt=dt)
+    z2, x2, y2 = gen1.generate_multiple(n, noise_var=nv, dt=dt)
     
     gen1.add_intervention('d', 'b', np.random.rand(b_size), start=0, end=t)
-    x3, y3, z3 = gen1.generate_multiple(n, noise_var=nv, dt=dt)
+    z3, x3, y3 = gen1.generate_multiple(n, noise_var=nv, dt=dt)
 
     plot_pca([x1, x2, x3], 'a', alpha=0.4)
 
@@ -175,7 +175,7 @@ def test_6():
         init_full=True, 
         silent=True
     )
-    x,y,z = gen.generate()
+    z, x, y = gen.generate()
     gen.save(x)
 
 def test_7():
@@ -187,7 +187,7 @@ def test_7():
         init_full=True, 
         silent=True
     )
-    x,y,z = gen.generate_multiple(10)
+    z, x, y = gen.generate_multiple(10)
     gen.save(x)
 
 def test_8():
@@ -199,7 +199,7 @@ def test_8():
         init_full=True, 
         silent=True
     )
-    x,y,z = gen.generate_multiple(10)
+    z, x, y = gen.generate_multiple(10)
     gen.save(x, "/tmp/abc", prefix="abc_")
 
 def test_9():
@@ -211,8 +211,8 @@ def test_9():
         init_full=True, 
         silent=True
     )
-    x,y,z = gen.generate(downsample=5)
+    z, x, y = gen.generate(downsample=5)
+    print("Z:", z['a'].sum(axis=1))
     print("X:", x['a'].sum(axis=1))
     print("Y:", y['a'].sum(axis=1))
-    print("Z:", z['a'].sum(axis=1))
 

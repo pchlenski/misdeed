@@ -741,12 +741,12 @@ class OmicsGenerator:
             //======================================================\\
             ||Name:   Sampling:   Normalization:  Number of samples:||
             ||======================================================||
-            ||X       unsampled   unnormalized    full              ||
-            ||Y       unsampled   normalized      downsampled       ||
-            ||Z       sampled     normalized      downsampled       ||
+            ||Z       unsampled   unnormalized    full              ||
+            ||X       unsampled   normalized      downsampled       ||
+            ||Y       sampled     normalized      downsampled       ||
             \\======================================================//
         
-        Each X/Y/Z dict contains (node, timecourse) pairs. The timecourse is a numpy array with shape (number of time 
+        Each Z/X/Y dict contains (node, timecourse) pairs. The timecourse is a numpy array with shape (number of time 
         points, node size).
 
         Raises:
@@ -808,96 +808,99 @@ class OmicsGenerator:
             return fn
 
         # Initialization steps
-        X = {} # Latent absolute abundances
-        Y = {} # Relative abundances/sampling probabilities
-        Z = {} # Sampled abundances
+        # X = {} # Latent absolute abundances
+        # Y = {} # Relative abundances/sampling probabilities
+        # Z = {} # Sampled abundances
+        Z = {} # Latent absolute abundances
+        X = {} # Probability distribution/normalized abundances
+        Y = {} # Sampled abundances
 
         for node in self.nodes:
-            X[node.name] = [node.initial_value]
+            Z[node.name] = [node.initial_value]
  
         # Generalized Lotka-Volterra steps, plus bells and whistles
         for t in range(self._time_points - 1):
-            X_temp = {} # Use this so that all values are updated at once
+            Z_temp = {} # Use this so that all values are updated at once
 
             for node in self.nodes:
                 # Get values from dicts
-                x = X[node.name]
+                z = Z[node.name]
                 g = node.growth_rates
 
                 # Initialize values
-                Xprev = np.copy(x[-1])  # last time point, X_(t-1)
+                Zprev = np.copy(z[-1])  # last time point, X_(t-1)
 
                 # Pass to solver
                 # TODO: possible to do this all in one shot rather than looping?
-                grad = _grad_fn(node, X, g, t)
-                ivp = solve_ivp(grad, (0,dt), Xprev, method="RK45")
-                Xt = ivp.y[:,-1]
+                grad = _grad_fn(node, Z, g, t)
+                ivp = solve_ivp(grad, (0,dt), Zprev, method="RK45")
+                Zt = ivp.y[:,-1]
 
                 # Tweak abundances on a per-node basis
                 # TODO: Maybe this would be better if it were size-adjusted?
                 for intervention in node.interventions:
                     if intervention.affects_abundance == True:
-                        Xt += intervention.vector * intervention.U[t]
+                        Zt += intervention.vector * intervention.U[t]
 
                 # Add biological noise:
                 noise = np.random.normal(scale=noise_var, size=node.size) 
 
                 # No noise for missing taxa
-                noise = noise * (Xt > 0)
+                noise = noise * (Zt > 0)
 
                 # Equivalent to log->add noise->exp
                 if node.log_noise == True:
-                    Xt *= np.exp(noise)                                   
+                    Zt *= np.exp(noise)                                   
                 else:
-                    Xt += noise
+                    Zt += noise
 
                 # Push to results
-                Xt = np.clip( Xt, 0, None )
-                X_temp[node.name] = Xt
+                Zt = np.clip(Zt, 0, None)
+                Z_temp[node.name] = Zt
             
             # Push all values for this time point to X at once
-            for key in X_temp:
-                X[key] += [X_temp[key]]
+            for key in Z_temp:
+                Z[key] += [Z_temp[key]]
 
         # Simulate sampling noise
         for node in self.nodes:
-            x = np.array(X[node.name])
+            z = np.array(Z[node.name])
 
             # Save latent state
-            y = x.copy()
+            x = z.copy()
 
             # Discard first couple elements (ensure values are near attractor)
-            y = y[self._discard_first:]
+            x = x[self._discard_first:]
 
             # Take every nth element
             # Negative coefficient ensures we sample from the end
-            y = y[::-downsample]
+            x = x[::-downsample]
 
             # Need to un-reverse the data now
-            y = y[::-1]
+            x = x[::-1]
 
             # Relative abundances         
-            y = np.apply_along_axis(lambda a: a/sum(a), 1, y)
+            x = np.apply_along_axis(lambda a: a/sum(a), 1, x)
             # y = y / np.sum(y, axis=1).reshape(-1,1)
 
             # Draw samples
-            z = []
-            for idx in range(y.shape[0]):
+            y = []
+            for idx in range(x.shape[0]):
                 try:
-                    Zt = np.random.multinomial(n_reads, y[idx]) / n_reads
-                    z += [Zt]
+                    Yt = np.random.multinomial(n_reads, x[idx]) / n_reads
+                    y += [Yt]
                 except ValueError:
                     # TODO: circle back and figure out what was breaking this
                     # print("ERROR: check self._weird for more info")
                     # self._weird = X[node.name][idx] # debugging variable
-                    z += [np.zeros(node.size)]
+                    y += [np.zeros(node.size)]
 
             # Push to output
             X[node.name] = x
-            Y[node.name] = y
-            Z[node.name] = np.array(z)
+            Y[node.name] = np.array(y)
+            Z[node.name] = z
 
-        return X, Y, Z
+        return Z, X, Y
 
     def generate_multiple(
         self, 
@@ -936,12 +939,12 @@ class OmicsGenerator:
             //======================================================\\
             ||Name:   Sampling:   Normalization:  Number of samples:||
             ||======================================================||
-            ||X       unsampled   unnormalized    full              ||
-            ||Y       unsampled   normalized      downsampled       ||
-            ||Z       sampled     normalized      downsampled       ||
+            ||Z       unsampled   unnormalized    full              ||
+            ||X       unsampled   normalized      downsampled       ||
+            ||Y       sampled     normalized      downsampled       ||
             \\======================================================//
         
-        Each X/Y/Z array contains n dicts, each of which contains (node, timecourse) pairs. The timecourse is a numpy 
+        Each Z/X/Y array contains n dicts, each of which contains (node, timecourse) pairs. The timecourse is a numpy 
         array with shape (number of time points, node size).
 
         Raises:
@@ -963,7 +966,7 @@ class OmicsGenerator:
                 abundances = np.random.exponential(size=node.size) * np.random.binomial(1, 1-extinct_fraction, size=node.size)
                 self.set_initial_value(node.name, abundances, verbose=False)
             
-            X,Y,Z = self.generate(**generate_args)
+            Z,X,Y = self.generate(**generate_args)
             out_X.append(X)
             out_Y.append(Y)
             out_Z.append(Z)
@@ -971,7 +974,7 @@ class OmicsGenerator:
         # return nodes to old values
         self.nodes = old_nodes
 
-        return out_X, out_Y, out_Z
+        return out_Z, out_X, out_Y
 
     def _allesina_tang_normal_matrix(
         self, 
@@ -1167,18 +1170,18 @@ class OmicsGenerator:
         
         Returns:
         --------
+        Z_control:
+            Z-list like generate_multiple() for control group.
         X_control:
             X-list like generate_multiple() for control group.
         Y_control:
             Y-list like generate_multiple() for control group.
-        Z_control:
-            Z-list like generate_multiple() for control group.
+        Z_case:
+            Z-list like generate_multiple() for case group.
         X_case:
             X-list like generate_multiple() for case group.
         Y_case:
             Y-list like generate_multiple() for case group.
-        Z_case:
-            Z-list like generate_multiple() for case group.
         
         Raises:
         -------
@@ -1203,9 +1206,9 @@ class OmicsGenerator:
             start=0, 
             end=self._time_points
         )
-        x_case, y_case, z_case = case_gen.generate_multiple(n_cases, **generate_args)
+        z_case, x_case, y_case = case_gen.generate_multiple(n_cases, **generate_args)
 
-        return x_control, y_control, z_control, x_case, y_case, z_case
+        return z_control, x_control, y_control, z_case, x_case, y_case
 
     def copy(self) -> None:
         """
@@ -1302,7 +1305,7 @@ class OmicsGenerator:
         if type(data) == list:
             for i in range(len(data)):
                 if self._silent == False:
-                    print(f"    Saving individual {i} in directory {output_path}/{i}/")
+                    print(f"\tSaving individual {i} in directory {output_path}/{i}/")
                 individual = data[i]
                 
                 # Check correct nested datatypes

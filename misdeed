@@ -253,7 +253,7 @@ class options:
         # Run generator
         if args.n_samples == 1:
             print(f"Generating single sample...")
-            x,y,z = gen.generate(
+            z, x, y = gen.generate(
                 noise_var=args.noise_variance,
                 n_reads=args.n_reads,
                 dt=args.time_step,
@@ -261,7 +261,7 @@ class options:
             )
         elif args.case_fraction == 0:
             print(f"Generating {args.n_samples} samples...")
-            x,y,z = gen.generate_multiple(
+            z,x,y = gen.generate_multiple(
                 args.n_samples,
                 extinct_fraction=args.extinct_fraction,
                 noise_var=args.noise_variance,
@@ -275,7 +275,7 @@ class options:
             if args.intervention_node == None:
                 args.intervention_node = gen.nodes[0].name 
 
-            x_control,y_control,z_control,x_case,y_case,z_case = gen.case_control(
+            z_control, x_control, y_control, z_case, x_case, y_case = gen.case_control(
                 args.n_samples,
                 case_frac=args.case_fraction,
                 node_name=args.intervention_node,
@@ -301,18 +301,18 @@ class options:
         print(f"Created directory {path}")
 
         if args.case_fraction == 0:
+            gen.save(z, f"{path}/Z")
             gen.save(x, f"{path}/X")
             gen.save(y, f"{path}/Y")
-            gen.save(z, f"{path}/Z")
         else:
             os.mkdir(f"{path}/control")
             os.mkdir(f"{path}/case")
+            gen.save(z_control, f"{path}/control/Z")
+            gen.save(z_case, f"{path}/case/Z")
             gen.save(x_control, f"{path}/control/X")
             gen.save(x_case, f"{path}/case/X")
             gen.save(y_control, f"{path}/control/Y")
             gen.save(y_case, f"{path}/case/Y")
-            gen.save(z_control, f"{path}/control/Z")
-            gen.save(z_case, f"{path}/case/Z")
 
         # Save plots
         if args.plot == True:
@@ -321,16 +321,16 @@ class options:
             # Single plot case
             if args.n_samples == 1:
                 os.mkdir(f"{path}/plots")
-                for node in z:
-                    plot = plot_timecourse(z[node])
+                for node in y:
+                    plot = plot_timecourse(y[node])
                     print(f"\tSaving plot for individual 0, node '{node}' in {path}/plots/0_{node}.png")
                     plt.savefig(f"{path}/plots/0_{node}")
 
             # Multiple plot case, no case-control
             elif args.case_fraction == 0:
                 os.mkdir(f"{path}/plots")
-                for idx in range(len(z)):
-                    sample = z[idx]
+                for idx in range(len(y)):
+                    sample = y[idx]
                     for node in sample:
                         plot = plot_timecourse(sample[node])
                         plt.title(f"Individual {idx}, node {node}", y=1.0, pad=30)
@@ -342,14 +342,14 @@ class options:
                 os.mkdir(f"{path}/case/plots")
                 os.mkdir(f"{path}/control/plots")
                 for idx in range(len(z_control)):
-                    sample = z_control[idx]
+                    sample = y_control[idx]
                     for node in sample:
                         plot = plot_timecourse(sample[node])
                         plt.title(f"Control: Individual {idx}, node {node}", y=1.0, pad=30)
                         print(f"\tSaving plot for individual {idx}, node '{node}' in {path}/control/plots/{idx}_{node}.png")
                         plt.savefig(f"{path}/control/plots/{idx}_{node}")
                 for idx in range(len(z_case)):
-                    sample = z_case[idx]
+                    sample = y_case[idx]
                     for node in sample:
                         plot = plot_timecourse(sample[node])
                         plt.title(f"Case: Individual {idx}, node {node}", y=1.0, pad=30)
@@ -362,20 +362,23 @@ class options:
             os.mkdir(f"{path}/pca")
 
             if args.n_samples == 1:
-                to_plot = [[z]]
-                nodes = z
+                to_plot = [[y]]
+                nodes = y
+                colors=None
             elif args.case_fraction == 0:
-                to_plot = [z]
-                nodes = z[0]
+                to_plot = [y]
+                nodes = y[0]
+                colors=None
             else:
-                to_plot = [z_control, z_case]
-                nodes = z_control[0]
+                to_plot = [y_control, y_case]
+                nodes = y_control[0]
+                colors = ['red', 'blue']
 
             for node in nodes:
-                plot = plot_pca(to_plot, node)
+                plt.cla()
+                plot = plot_pca(to_plot, node, colors=colors)
                 print(f"\tSaving PCA for node {node} in {path}/pca/{node}.png")
                 plt.savefig(f"{path}/pca/{node}")
-                plt.cla()
 
 
 

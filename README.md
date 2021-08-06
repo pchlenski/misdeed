@@ -71,7 +71,7 @@ gen.add_intervention(
 ### Single timecourse
 ```python
 # run generator and plot:
-x1, y1, z1 = gen.generate(dt=1e-2)
+z1, x1, y1 = gen.generate(dt=1e-2)
 plot_timecourse(y1['mgx'])
 plt.vlines(50, 0, 1)
 ```
@@ -80,7 +80,7 @@ plt.vlines(50, 0, 1)
 ### Multiple timecourses
 ```python
 # run multi-generator and plot:
-x2, y2, z2 = gen.generate_multiple(20)
+z2, x2, y2 = gen.generate_multiple(20)
 plot_pca([y2], 'mgx')
 ```
 ![Multiple timecourses](./img/ex2.png)
@@ -88,7 +88,7 @@ plot_pca([y2], 'mgx')
 ### Case-control
 ```python
 # run case-control and plot:
-x3_control, y3_control, z3_control, x3_case, y3_case, z3_case = gen.case_control(100, .75, 'mgx', 1)
+z3_control, x3_control, y3_control, z3_case, x3_case, y3_case = gen.case_control(100, .75, 'mgx', 1)
 plot_pca([y3_control, y3_case], 'mgx', colors=['red', 'blue'], plot_trajectories=False)
 ```
 ![Case-control](./img/ex3.png)
@@ -113,7 +113,7 @@ gen4.add_intervention(
 )
 
 # generate training data
-x4, y4, z4 = gen4.generate(dt=1e-2)
+z4, x4, y4 = gen4.generate(dt=1e-2)
 
 # infer params
 M, u, E = infer_glv_params(
@@ -132,7 +132,7 @@ gen4_inferred.add_intervention('int1', 'mgx', E.reshape(-1), start=50, end=100)
 gen4_inferred.set_initial_value('mgx', u.reshape(-1), growth_rate=True)
 gen4_inferred.set_initial_value('mgx', gen4.get('mgx').initial_value) # same init. abundances as gen 1
 
-x4_inferred, y4_inferred, z4_inferred = gen4_inferred.generate(dt=1e-2)
+z4_inferred, x4_inferred, y4_inferred = gen4_inferred.generate(dt=1e-2)
 
 # plot both trajectories
 colors = cm.get_cmap('magma', 20)(range(15))

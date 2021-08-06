@@ -214,6 +214,9 @@ class options:
                 time_points=args.time_points,
                 discard_first=args.discard_first
             )
+            U = {} # intervention u vectors
+            B = {} # intervention b vectors
+            intervention_nodes = {} # which nodes are affected
             for filename in os.listdir(args.parameter_dir):
 
                 if not filename.endswith(".tsv") and not filename.endswith(".csv"):
@@ -243,8 +246,36 @@ class options:
                     print(f"Setting initial abundances for node '{node_name}' from {filename}...")
                     gen.set_initial_value(node_name, x0)
 
+                elif filename.endswith("_u.tsv"):
+                    u = np.loadtxt(f"{args.parameter_dir}/{filename}")
+                    temp_name = filename.split("_u.tsv")[0]
+                    intervention_name, node_name = temp_name.split("_")
+                    U[intervention_name] = u
+                    intervention_nodes[intervention_name] = node_name
+
+                elif filename.endswith("_b.tsv"):
+                    b = np.loadtxt(f"{args.parameter_dir}/{filename}")
+                    temp_name = filename.split("_b.tsv")[0]
+                    intervention_name, node_name = temp_name.split("_")
+                    B[intervention_name] = b
+                    intervention_nodes[intervention_name] = node_name # may be redundant with above
+
                 else:
                     print(f"Skipping over {filename}")
+
+            # process interventions:
+            if U.keys() != B.keys():
+                print("U:", U.keys())
+                print("B:", B.keys())
+                raise Exception("Intervention U and B vectors are not the same. Check that _b.tsv and _u.tsv are paired.")
+            else:
+                for intervention_name in U:
+                    gen.add_intervention(
+                        name=intervention_name,
+                        node_name=intervention_nodes[intervention_name],
+                        vector=B[intervention_name],
+                        U=U[intervention_name]
+                    )
 
         print(gen)
 

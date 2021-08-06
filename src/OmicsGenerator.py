@@ -504,12 +504,14 @@ class OmicsGenerator:
         TODO
         """
 
+        print("U:", type(U), U)
+
         # Check namespace
         if name in self._namespace:
             raise Exception(f"Name {name} already in use. Please use a unique name")
 
         # Check U vector is correct length
-        if U != None:
+        if U is not None:
             if len(U) != self._time_points:
                 raise Exception(f"U vector is different size from number of time points: {len(U)} != {self._time_points}")
 
@@ -519,18 +521,18 @@ class OmicsGenerator:
 
         # Process node
         node = self.get(node_name, "node")
-        if node == None:
+        if node is None:
             raise Exception("Invalid node! Please try again")
 
         # A bunch of control flow to make a boolean vector called U
-        if U == None and (start == None or end == None):
+        if U is not None:
+            pass # explicit U vectors are best
+        elif start is None or end is None:
             raise Exception("Need to supply a (start,end) pair or a U vector") 
-        elif start != None and end != None:
+        else:
             U = np.array([0] * self._time_points)
             U[start:end] = 1
-        else:
-            raise Exception("Other exception in OmicsIntervention")
-        
+
         # Make the intervention and add it to self
         intervention = self._OmicsIntervention(
             name, 

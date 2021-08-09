@@ -1,4 +1,6 @@
-# Inferring gLV parameters
+"""
+Helper functions: infer gLV parameters.
+"""
 import numpy as np
 
 def infer_glv_params(
@@ -36,12 +38,12 @@ def infer_glv_params(
         Array. The inferred growth rates.
     inferred_E
         Array. The inferred response(s) to intervention(s), if intervention vectors are provided.
-    
+
     Raises:
     -------
     TODO
 
-    Based on the paper "Ecological Modeling from Time-Series Inference: Insight into Dynamics and Stability of 
+    Based on the paper "Ecological Modeling from Time-Series Inference: Insight into Dynamics and Stability of
     Intestinal Microbiota" by Stein, Bucci, et al (2013).
     """
 
@@ -53,7 +55,7 @@ def infer_glv_params(
     n_times, n_clades = abundances.shape
 
     # Need dummy interventions
-    if interventions is None:
+    if not interventions:
         interventions = np.zeros(n_times)
         no_interventions = True
 
@@ -69,7 +71,7 @@ def infer_glv_params(
     Y = Y[:,:-1] # drop last time point
 
     # Build up F matrix
-    if type(dt) is not np.ndarray:
+    if not isinstance(dt, np.ndarray):
         dt = dt * np.ones((n_times - 1, 1)) # change in times
     logs = np.log(abundances + pseudocount)
     dx = np.diff(logs, axis=0) # changes in log-abundances
@@ -90,10 +92,9 @@ def infer_glv_params(
     MuE = F @ Y.T @ np.linalg.inv(Y @ Y.T + lambdas)
     inferred_M = MuE[:,:n_clades]
     inferred_u = MuE[:,n_clades]
-    if no_interventions == True:
+    if no_interventions:
         inferred_E = np.zeros(n_clades)
     else:
         inferred_E = MuE[:,n_clades+1:]
 
     return inferred_M, inferred_u, inferred_E
-

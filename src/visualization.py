@@ -1,4 +1,6 @@
-# Plotting helper functions
+"""
+Helper functions: plot timecourses
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -9,7 +11,6 @@ def plot_timecourse(
     df,
     figsize=(40,10),
     cols=15) -> None:
-
     """
     Makes a bar chart of longitudinal data from a generator
 
@@ -19,17 +20,17 @@ def plot_timecourse(
             Assumes rows = time points, columns = dimensions (e.g. taxa)
         cols:
             Int. Number of columns in legend.
-        
+
     Returns:
         A stacked bar chart showing a colored relative abundance timecourse.
-    
+
     Raises:
         TODO
     """
 
     # make dataframe automatically
-    if type(df) is not pd.DataFrame:
-      df = pd.DataFrame(df)
+    if not isinstance(df, pd.DataFrame):
+        df = pd.DataFrame(df)
 
     # get colors
     n_colors = df.shape[1]
@@ -50,14 +51,13 @@ def plot_timecourse(
     return plots
 
 def plot_pca(
-    trajectories, 
-    node_name, 
-    colors=False, 
-    cmap='magma', 
-    plot_endpoints=True, 
+    trajectories,
+    node_name,
+    colors=False,
+    cmap='magma',
+    plot_endpoints=True,
     plot_trajectories=True,
     **kwargs) -> None:
-
     """
     Makes PCA plots from (a list of) generator outputs.
 
@@ -77,13 +77,13 @@ def plot_pca(
             Boolean. If True, plots entire timecourse as a PCA trajectory.
         **kwargs:
             Passed to plt.plot() and plt.scatter().
-    
+
     Returns:
-        A PCA plot of trajectories for each individual in the input set. 
-        
+        A PCA plot of trajectories for each individual in the input set.
+
         If multiple inputs are presented, then individuals will be colored according to the 'colors' parameter. If only
         one input is presented, then individuals will be colored individually according to the 'cmap' parameter.
-    
+
     Raises:
         TODO
     """
@@ -105,18 +105,17 @@ def plot_pca(
         colormap = temp_cmap(range(n_samples + 1)) # +1 to avoid really light colors
 
     # If plotting clustered data without specified clusters, generate cmap
-    elif colors == False:
+    elif not colors:
         n_clusters = len(trajectories)
         temp_cmap = cm.get_cmap(cmap, n_clusters)
         colormap = temp_cmap(range(n_clusters + 1))
-        # colors = colormap.colors
         colors = colormap
 
     # Start plotting inputs
-    input_counter = 0
+    trajectory_counter = 0
 
-    for input in trajectories:
-        node_input = [sample[node_name] for sample in input]
+    for trajectory in trajectories:
+        node_input = [sample[node_name] for sample in trajectory]
         individual_counter = 0
 
         for individual in node_input:
@@ -127,19 +126,19 @@ def plot_pca(
             # color case 1: all inputs belong to the same cluster
             if len(trajectories) == 1:
                 c = colormap[individual_counter]
-            
+
             # color case 2: different clusters
             else:
-                c = colors[input_counter]
-            
+                c = colors[trajectory_counter]
+
             # plot PCA trajectories we need
-            if plot_trajectories == True:
+            if plot_trajectories:
                 plt.plot(individual_pca[:,0], individual_pca[:,1], color=c, **kwargs)
 
             # draw Xes
-            if plot_endpoints == True:
+            if plot_endpoints:
                 plt.scatter(individual_pca[-1,0], individual_pca[-1,1], color=c, marker='x', **kwargs)
-            
+
             individual_counter += 1
 
-        input_counter += 1
+        trajectory_counter += 1

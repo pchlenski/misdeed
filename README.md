@@ -1,6 +1,5 @@
-# MiSDEED: Microbial Synthetic Data Engine for Experimental Design
-Microbiome data simulator for power analysis
-
+# MiSDEED
+Microbiome Synthetic Data Engine for Experimental Design
 ![Diagram](./img/diagram.png)
 <!-- example synthetic data goes here -->
 
@@ -164,7 +163,7 @@ output
     |   |   |   |---[node_0_name].tsv
     |   |   |   |---[node_1_name].tsv
     |   |   |   `---...
-    |   |   |---...
+    |   |   `---...
     |   |---Z
     |   |   |---0
     |   |   |   |---[node_0_name].tsv

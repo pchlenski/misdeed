@@ -1,9 +1,13 @@
-import numpy as np
-from scipy.integrate import solve_ivp
+"""
+Module docstring
+"""
+
 from copy import deepcopy
 from uuid import uuid4
 from os import mkdir
-from warnings import warn
+
+import numpy as np
+from scipy.integrate import solve_ivp
 
 class OmicsGenerator:
     """
@@ -20,14 +24,14 @@ class OmicsGenerator:
     Args:
     -----
     time_points:
-        Integer. How many total time points to generate. Not to be confused with downsampling coefficient (applied 
+        Integer. How many total time points to generate. Not to be confused with downsampling coefficient (applied
         later).
     nodes:
         List of strings. (Unique) node names for each node.
     node_sizes:
         List of ints. Node sizes for each node.
     discard_first:
-        Integer. How many initial time points to discard. Setting higher discard_first values generally ensures 
+        Integer. How many initial time points to discard. Setting higher discard_first values generally ensures
         samples closer to equilibrium.
     init_full:
         Boolean. If True, initializes all interactions, growth rates,and initial abundances at random.
@@ -39,17 +43,17 @@ class OmicsGenerator:
     Returns:
     --------
     OmicsGenerator object.
-    
+
     Raises:
     -------
     TODO
     """
 
     def __init__(
-        self, 
-        node_sizes : list = [],
-        nodes : list = [], 
-        time_points : int = 100, 
+        self,
+        node_sizes : list = None,
+        nodes : list = None,
+        time_points : int = 100,
         discard_first : int = 0,
         init_full : bool = False,
         silent : bool = False,
@@ -58,13 +62,18 @@ class OmicsGenerator:
         Initializes generator. See docstring for class.
         """
 
+        # Require node sizes
+        if node_sizes == None:
+            raise Exception("Must specify at least one node size.")
+
         # Better handling for single-node systems
-        if type(nodes) == str:
+        if isinstance(nodes, str):
             nodes = [nodes]
-        if type(node_sizes) == int:
+        if isinstance(node_sizes, int):
             node_sizes = [node_sizes]
 
-        if len(node_sizes) > 0 and len(nodes) == 0:
+        # Give default node names
+        if node_sizes is not None and nodes is None:
             nodes = [f"n{i}" for i in range(len(node_sizes))]
         elif len(nodes) != len(node_sizes):
             raise Exception(f"Node lengths and node sizes do not match: {len(nodes)} != {len(node_sizes)}")
@@ -81,14 +90,12 @@ class OmicsGenerator:
         self.nodes = []
         for node_name, size in zip(nodes, node_sizes):
             self.add_node(node_name, size)
-        
+
         if init_full:
             self._init_full(**kwargs)
 
-        if self._silent == False:
+        if not self._silent:
             print("Initialized")
-
-        return None
 
     class _OmicsNode:
         """
@@ -99,12 +106,12 @@ class OmicsGenerator:
         Attributes:
         -----------
         inbound:
-            A dict of (node name, matrix) tuples representing matrix interactions of the type Ax --> y, where y is 
+            A dict of (node name, matrix) tuples representing matrix interactions of the type Ax --> y, where y is
             another node. Maintained by self.add_interaction().
         outbound:
-            A dict of (node name, matrix) tuples representing matrix interactions of the type Ay --> x, where y is 
+            A dict of (node name, matrix) tuples representing matrix interactions of the type Ay --> x, where y is
             another node. Maintained by self.add_interaction().
-        interventions: 
+        interventions:
             A list of interventions which affect this node. Maintained by self.add_intervention().
 
         Args:
@@ -114,10 +121,10 @@ class OmicsGenerator:
         size:
             Integer: How many elements does this node have?
         initial_value:
-            A vector of initial abundances for node elements. Length must be equal to size. Generally not called 
+            A vector of initial abundances for node elements. Length must be equal to size. Generally not called
             on initialization - use self.add_initial_value() instead.
         growth_rates:
-            Intrinsic growth/death rates for node elements. Length must be equal to size. Generally not called on 
+            Intrinsic growth/death rates for node elements. Length must be equal to size. Generally not called on
             initialization - use self.add_initial_value() with 'growth_rate = True' instead.
         names:
             List of strings for naming node dimensions.
@@ -136,19 +143,19 @@ class OmicsGenerator:
         """
 
         def __init__(
-            self, 
-            name : str, 
-            size : int, 
+            self,
+            name : str,
+            size : int,
             initial_value : np.ndarray,
             growth_rates : np.ndarray,
             names : list,
-            log_noise : bool, 
+            log_noise : bool,
             verbose : bool = True) -> None:
 
             """
             Initializes node. See docstring for class.
             """
-            
+
             self.name = name
             self.size = size
             self.initial_value = initial_value
@@ -157,13 +164,11 @@ class OmicsGenerator:
             self.outbound = {}
             self.inbound = {}
             self.interventions = []
-            self.names = None
+            self.names = names
 
-            if verbose == True:
+            if verbose:
                 print(f"Node '{name}' initialized")
 
-            return None
-        
         def __str__(self):
             return f"{self.name}\t{self.size}"
 
@@ -171,7 +176,7 @@ class OmicsGenerator:
         """
         PRIVATE METHOD. Call with self.add_interaction() instead.
 
-        A class for omics interactions. This has the general form of an m x n matrix representing interactions between 
+        A class for omics interactions. This has the general form of an m x n matrix representing interactions between
         one set (e.g. taxa) and another set (e.g. other taxa, metabolites, whatever)
 
         Attributes:
@@ -192,11 +197,11 @@ class OmicsGenerator:
         matrix:
             A matrix-type object with interactions
         lag:
-            Integer. How much delay to put into dependencies. For instance, a lag of 1 on an interaction means we 
+            Integer. How much delay to put into dependencies. For instance, a lag of 1 on an interaction means we
             compute Ax_t = y_(t+1)
         verbose:
             Boolean. If False, suppresses print statements.
-        
+
         Returns:
         --------
         _OmicsInteraction object.
@@ -207,12 +212,12 @@ class OmicsGenerator:
         """
 
         def __init__(
-            self, 
-            name : str, 
-            outbound_node : None, 
-            inbound_node : None, 
-            matrix : np.ndarray, 
-            lag : int, 
+            self,
+            name : str,
+            outbound_node : None,
+            inbound_node : None,
+            matrix : np.ndarray,
+            lag : int,
             verbose : bool = True) -> None:
             """
             Initializes interaction. See docstring for class.
@@ -226,11 +231,9 @@ class OmicsGenerator:
             self.nrows = matrix.shape[0] # e.g. number of taxa
             self.ncols = matrix.shape[1] # e.g. number of metabolites
 
-            if verbose == True:
+            if verbose:
                 print(f"Interaction '{name}' added")
 
-            return None
-        
         def __str__(self):
             return f"{self.name}:\t({self.outbound_node.name})-->({self.inbound_node.name})\tLag: {self.lag}"
 
@@ -238,7 +241,7 @@ class OmicsGenerator:
         """
         PRIVATE METHOD. Call with self.add_intervention() instead.
 
-        A class for omics interventions. This has the general form of an n-length matrix which describes the reactions 
+        A class for omics interventions. This has the general form of an n-length matrix which describes the reactions
         of some set (e.g. taxa) to this particular intervention.
 
         Args:
@@ -251,28 +254,28 @@ class OmicsGenerator:
             String. Name of node affected by this intervention/matrix.
         U:
             An indicator vector which is 1 for time points when the intervention is active, 0 otherwise.
-        affects_abundance:  
-            Boolean. If True, intervention vector will be applied directly to the abundance vector rather than 
+        affects_abundance:
+            Boolean. If True, intervention vector will be applied directly to the abundance vector rather than
             growth rates.
         verbose:
             Boolean. If False, suppresses print statements.
-        
+
         Returns:
         --------
         _OmicsIntevention object.
-        
+
         Raises:
         -------
         None (fails silently, use add_intervention() instead).
         """
 
         def __init__(
-            self, 
-            name : str, 
-            vector : np.ndarray, 
-            node_name : str, 
-            U : np.ndarray, 
-            affects_abundance : bool, 
+            self,
+            name : str,
+            vector : np.ndarray,
+            node_name : str,
+            U : np.ndarray,
+            affects_abundance : bool,
             verbose : bool = True) -> None:
 
             """
@@ -285,105 +288,92 @@ class OmicsGenerator:
             self.U = np.array(U)
             self.affects_abundance = affects_abundance
 
-            if verbose == True:
+            if verbose:
                 print(f"Intervention '{name}' added")
 
-            return 
+            return
 
         def __str__(self):
             end = ""
-            if self.affects_abundance == True:
+            if self.affects_abundance:
                 end = "\taffects abundance"
             return f"{self.name}\t{self.node_name}{end}"
 
     def add_node(
-        self, 
-        name : str, 
-        size : int, 
-        initial_value : np.ndarray = None, 
-        growth_rates : np.ndarray = None, 
+        self,
+        name : str,
+        size : int,
+        initial_value : np.ndarray = None,
+        growth_rates : np.ndarray = None,
         names : list = None,
-        log_noise : bool = True, 
+        log_noise : bool = True,
         verbose : bool = True) -> None:
         """
         Adds nodes to generator object.
 
         Args:
         -----
-        name:           
+        name:
             String. Used to identify node. Must be unique.
-        size:           
-            Length of vector associated with a time point of this node. For instance, for a metagenomics node, this 
+        size:
+            Length of vector associated with a time point of this node. For instance, for a metagenomics node, this
             would correspond to the number of taxa.
-        initial_value:  
+        initial_value:
             Value of this node at t = 0. Must be same length as node size.
-        growth_rates:   
+        growth_rates:
             Element-wise growth/death rates for this node. Must be same length as node size.
         names:
             Optional. List of names for each node element. Used for printing/saving data.
-        log_noise:      
-            Boolean. If True, noise will be added to log-relative abundance.If False, noise will be added to relative 
+        log_noise:
+            Boolean. If True, noise will be added to log-relative abundance.If False, noise will be added to relative
             abundances.
         verbose:
             Boolean. If False, suppresses print statements.
-    
+
         Returns:
         --------
         None (modifies generator in place).
 
         Raises:
         -------
-        NodeDimensionMismatchError:
+        ValueError:
             One or more of [initial_value, growth_rates, names] are the wrong size.
         """
 
         # Check sizes of inputs agree
         for param_name in ["initial_value", "growth_rates", "names"]:
             param = eval(param_name)
-            if param != None and len(param) != size:
-                raise NodeDimensionMismatchError(f"{param_name} is wrong size: {len(param)} != {size}")
-
-        # # PAC: this is the old code to do this
-        # if initial_value != None:
-        #     if len(initial_value) != size:
-        #         raise Exception(f"initial_value is wrong size: {len(initial_value)} != {size}")
-        # if growth_rates != None:
-        #     if len(growth_rates) != size:
-        #         raise Exception(f"growth_rates is wrong size: {len(growth_rates)} != {size}")
-        # if names != None:
-        #     if len(names) != size:
-        #         raise Exception(f"names is wrong size: {len(names)} != {size}")
+            if param is not None and len(param) != size:
+                raise ValueError(f"{param_name} is wrong size: {len(param)} != {size}")
 
         # Check namespace
         if name in self._namespace:
             raise Exception(f"Name {name} already in use. Please use a unique name")
 
         # Check verbosity
-        if self._silent == True:
+        if self._silent:
             verbose = False
 
         # Generate node and append to object
         node = self._OmicsNode(
             name,
             size,
-            initial_value, 
+            initial_value,
             growth_rates,
             names,
-            log_noise, 
+            log_noise,
             verbose
         )
         self.nodes.append(node)
         self._namespace.add(name)
 
-        return None
-
     def add_interaction(
-        self, 
-        name : str, 
-        outbound_node_name : str, 
-        inbound_node_name : str, 
-        matrix : np.ndarray, 
-        lag : int = 0, 
+        self,
+        name : str,
+        outbound_node_name : str,
+        inbound_node_name : str,
+        matrix : np.ndarray,
+        lag : int = 0,
         verbose : bool = True) -> None:
         """
         Adds interactions to generator object.
@@ -394,16 +384,16 @@ class OmicsGenerator:
 
         Args:
         -----
-        name:               
+        name:
             String. A name for this interaction.
-        outbound_node_name: 
+        outbound_node_name:
             String. Name of node from which the edge originates
-        inbound_node_name:  
+        inbound_node_name:
             String. Name of node at which the edge terminates
-        matrix:             
+        matrix:
             A matrix-type object with interactions
-        lag:                
-            Integer. How much delay to put into dependencies. For instance, a lag of 1 on an interaction means we 
+        lag:
+            Integer. How much delay to put into dependencies. For instance, a lag of 1 on an interaction means we
             compute Ax_t = y_(t+1)
         verbose:
             Boolean. If False, suppresses print statements.
@@ -422,30 +412,30 @@ class OmicsGenerator:
             raise Exception(f"Name {name} already in use. Please use a unique name")
 
         # Check verbosity
-        if self._silent == True:
+        if self._silent:
             verbose = False
 
         # Get nodes
         outbound_node = self.get(outbound_node_name, "node")
-        if outbound_node == None:
+        if outbound_node is None:
             raise Exception("Outbound node is invalid")
 
         inbound_node = self.get(inbound_node_name, "node")
-        if inbound_node == None:
+        if inbound_node is None:
             raise Exception("Inbound node is invalid")
 
         # Check that matrix dimensions match
         if matrix.shape[1] != inbound_node.size:
-            raise Exception(f"Matrix dimension mismatch: matrix shape[1] = {matrix.shape[1]} != {inbound_node.size} (size of inbound node '{inbound_node.name}')")
+            raise ValueError(f"Matrix shape[1] = {matrix.shape[1]} != {inbound_node.size} (size of inbound node '{inbound_node.name}')")
         if matrix.shape[0] != outbound_node.size:
-            raise Exception(f"Matrix dimension mismatch: matrix shape[0] = {matrix.shape[0]} != {outbound_node.size} (size of outbound node '{outbound_node.name}')")
+            raise ValueError(f"Matrix shape[0] = {matrix.shape[0]} != {outbound_node.size} (size of outbound node '{outbound_node.name}')")
 
         interaction = self._OmicsInteraction(
-            name, 
-            outbound_node, 
-            inbound_node, 
-            matrix, 
-            lag, 
+            name,
+            outbound_node,
+            inbound_node,
+            matrix,
+            lag,
             verbose
         )
         self._interactions.append(interaction)
@@ -456,17 +446,15 @@ class OmicsGenerator:
 
         self._namespace.add(name)
 
-        return None
-
     def add_intervention(
-        self, 
-        name : str, 
-        node_name : str, 
-        vector : np.ndarray, 
-        affects_abundance : bool = False, 
-        U : np.ndarray = None, 
-        start : int = None, 
-        end : int = None, 
+        self,
+        name : str,
+        node_name : str,
+        vector : np.ndarray,
+        affects_abundance : bool = False,
+        U : np.ndarray = None,
+        start : int = None,
+        end : int = None,
         verbose : bool = True) -> None:
         """
         Adds an intervention to generator.
@@ -475,26 +463,26 @@ class OmicsGenerator:
 
         Args:
         -----
-        name:               
+        name:
             String. A name for our intervention. Only used for printing and other bookkeeping.
-        node_name:          
+        node_name:
             String. Name of node affected by this intervention/matrix.
-        vector:             
+        vector:
             A vector-type object detailing, elementwise, the reactions of each node coordinate to an intervention.
-        affects_abundance:  
-            Boolean. If True, intervention vector will be applied directly to the abundance vector rather than to growth 
+        affects_abundance:
+            Boolean. If True, intervention vector will be applied directly to the abundance vector rather than to growth
             rates.
-        U:                  
+        U:
             An indicator vector which is 1 for time pointswhen the intervention is active, 0 otherwise.
-        start:              
-            First time point when interaction begins. Use only for interactions of the form 0*1+0*. Otherwise, use U 
+        start:
+            First time point when interaction begins. Use only for interactions of the form 0*1+0*. Otherwise, use U
             variable instead.
-        end:                
-            Last node when interaction is active. Use only for interactions of the form 0*1+0*. Otherwise, use U 
+        end:
+            Last node when interaction is active. Use only for interactions of the form 0*1+0*. Otherwise, use U
             variable instaed.
         verbose:
             Boolean. If False, suppresses print statements.
-            
+
         Returns:
         --------
         None (modifies generator in place).
@@ -514,7 +502,7 @@ class OmicsGenerator:
                 raise Exception(f"U vector is different size from number of time points: {len(U)} != {self._time_points}")
 
         # Check verbosity
-        if self._silent == True:
+        if self._silent:
             verbose = False
 
         # Process node
@@ -526,19 +514,19 @@ class OmicsGenerator:
         if U is not None:
             pass # explicit U vectors are best
         elif start is None or end is None:
-            raise Exception("Need to supply a (start,end) pair or a U vector") 
+            raise Exception("Need to supply a (start,end) pair or a U vector")
         else:
             U = np.array([0] * self._time_points)
             U[start:end] = 1
 
         # Make the intervention and add it to self
         intervention = self._OmicsIntervention(
-            name, 
-            vector, 
-            node_name, 
-            U, 
-            affects_abundance, 
-            verbose=False
+            name,
+            vector,
+            node_name,
+            U,
+            affects_abundance,
+            verbose
         )
         if len(intervention.U) == self._time_points:
             self._interventions.append(intervention)
@@ -550,24 +538,22 @@ class OmicsGenerator:
 
         self._namespace.add(name)
 
-        return None
-
     def set_initial_value(
-        self, 
-        node_name : str, 
-        values : np.ndarray, 
-        growth_rate : bool = False, 
+        self,
+        node_name : str,
+        values : np.ndarray,
+        growth_rate : bool = False,
         verbose : bool = True) -> None:
         """
         Sets a node value or growth rate.
 
         Args:
         -----
-        node_name:      
+        node_name:
             Name of node being altered
-        values:         
+        values:
             Vector. Initial values for node. Must be same length as node size.
-        growth_rate:    
+        growth_rate:
             Boolean. If True, affects the growth_rate parameter of the node. Otherwise, affects initial values of node.
         verbose:
             Boolean. If False, suppresses print statements.
@@ -584,32 +570,30 @@ class OmicsGenerator:
         node = self.get(node_name, "node")
 
         # Check node exists
-        if node == None:
+        if node is None:
             raise Exception(f"Invalid node name: {node_name} does not exist")
 
         # Check dimensions match
         if len(values) != node.size:
             raise Exception(f"Size mismatch with node size: {len(values)} != {node.size}")
-        
+
         # Set values
-        if growth_rate == False:
+        if not growth_rate:
             node.initial_value = values
-        elif growth_rate == True:
+        elif growth_rate:
             node.growth_rates = values
-        
+
         # Print output
-        if verbose == True and self._silent == False:
-            if growth_rate == False:
+        if verbose and not self._silent:
+            if not growth_rate:
                 print(f"Added x0 vector to node {node_name}")
-            elif growth_rate == True:
+            elif growth_rate:
                 print(f"Added growth rates to node {node_name}")
-        
-        return None
-        
+
     def get(
-        self, 
-        name : str, 
-        type : str in ["node", "interaction", "intervention"] = None) -> "generator element":
+        self,
+        name : str,
+        node_type : str in ["node", "interaction", "intervention"] = None) -> "generator element":
         """
         Gets a (node/interaction/intervention) by name.
 
@@ -629,17 +613,17 @@ class OmicsGenerator:
         None
         """
 
-        if type == None or type == "node":
+        if node_type in (None, "node"):
             for node in self.nodes:
                 if node.name == name:
                     return node
 
-        if type == None or type == "interaction":
+        if node_type in (None, "interaction"):
             for interaction in self._interactions:
                 if interaction.name == name:
                     return interaction
 
-        if type == None or type == "intervetion":
+        if node_type in (None, "intervention"):
             for intervention in self._interventions:
                 if intervention.name == name:
                     return intervention
@@ -647,21 +631,21 @@ class OmicsGenerator:
         return None
 
     def remove(
-        self, 
-        name : str, 
+        self,
+        name : str,
         verbose : bool = True) -> None:
         """
         Removes a node, intervention, or interaction from the generator by name.
 
         Args:
         -----
-        name:   
+        name:
             A string specifying the (unique) name of the element to be removed.
-        
+
         Returns:
         --------
         None (modifies generator in place).
-        
+
         Raises:
         -------
         TODO
@@ -672,38 +656,38 @@ class OmicsGenerator:
         if obj is None:
             raise Exception(f"Cannot find object named {name} to remove")
 
-        if type(obj) is self._OmicsNode:
+        if isinstance(obj, self._OmicsNode):
             for interaction in reversed(self._interactions): # reversed so we can remove interactions as we go
-                if interaction.inbound_node == obj or interaction.outbound_node == obj:
+                if obj in (interaction.inbound_node, interaction.outbound_node):
                     self._interactions.remove(interaction)
-            for intervention in reversed(self._interventions): 
+            for intervention in reversed(self._interventions):
                 if intervention.node_name == name:
                     self._interventions.remove(intervention)
             for node in self.nodes:
                 node.inbound.pop(name, None)
                 node.outbound.pop(name, None)
             self.nodes.remove(obj)
-            if verbose == True:
+            if verbose:
                 print(f"Removed node '{name}'")
 
-        elif type(obj) is self._OmicsInteraction:
+        elif isinstance(obj, self._OmicsInteraction):
             # Remove interaction from inbound node
             obj.inbound_node.outbound.pop(obj.outbound_node.name, None)
 
             # Remove interaction from outbound node
-            obj.outbound_node.inbound.pop(obj.inbound_node.name, None)  
+            obj.outbound_node.inbound.pop(obj.inbound_node.name, None)
 
             # Remove interaction from list
             self._interactions.remove(obj)
 
-            if verbose == True:
+            if verbose:
                 print(f"Removed interaction '{name}'")
 
-        elif type(obj) is self._OmicsIntervention:
+        elif isinstance(obj, self._OmicsIntervention):
             node = self.get(obj.node_name)
             node.interventions.remove(obj)
             self._interventions.remove(obj)
-            if verbose == True:
+            if verbose:
                 print(f"Removed intervention '{name}'")
 
         else:
@@ -711,27 +695,25 @@ class OmicsGenerator:
 
         self._namespace.remove(name)
 
-        return None
-
     def generate(
-        self, 
-        noise_var : float = 1e-2, 
-        n_reads : int = 1e5, 
-        dt : float = 1e-2, 
+        self,
+        noise_var : float = 1e-2,
+        n_reads : int = 1e5,
+        dt : float = 1e-2,
         downsample : int = 1) -> (dict, dict, dict):
         """
-        Generates a single timecourse of synthetic data. 
-        
+        Generates a single timecourse of synthetic data.
+
         Args:
         -----
-        noise_var:   
+        noise_var:
             Float. variance parameter for gaussian noise term.
         n_reads:
             Integer. Number of reads to draw from the unsampled distribution.
-        dt:         
+        dt:
             Float. time step size which gets passed to IVP solver
-        downsample: 
-            Integer. fraction of outputs to keep (1/n). By default, keeps all samples. downsample=4 means every 4th 
+        downsample:
+            Integer. fraction of outputs to keep (1/n). By default, keeps all samples. downsample=4 means every 4th
             sample is kept, etc. Downsample is deprecated. Simply modify "dt" instead.
 
         Returns:
@@ -745,8 +727,8 @@ class OmicsGenerator:
             ||X       unsampled   normalized      downsampled       ||
             ||Y       sampled     normalized      downsampled       ||
             \\======================================================//
-        
-        Each Z/X/Y dict contains (node, timecourse) pairs. The timecourse is a numpy array with shape (number of time 
+
+        Each Z/X/Y dict contains (node, timecourse) pairs. The timecourse is a numpy array with shape (number of time
         points, node size).
 
         Raises:
@@ -757,16 +739,14 @@ class OmicsGenerator:
         # Sanity checks
         for node in self.nodes:
             if node.initial_value is None:
-                class NodeNotInitializedError(Exception): pass
-                raise NodeNotInitializedError(f"Node '{node.name}' has no x0 vector")
+                raise ValueError(f"Node '{node.name}' has no x0 vector")
             if node.growth_rates is None:
-                class NodeNotInitializedError(Exception): pass
-                raise NodeNotInitializedError(f"Node '{node.name}' has no growth rate set")
+                raise ValueError(f"Node '{node.name}' has no growth rate set")
 
         def _grad_fn(
-            node : None, 
-            X : list, 
-            growth_rates : np.ndarray, 
+            node : None,
+            X : list,
+            growth_rates : np.ndarray,
             t : int) -> None:
             """
             This gets passed to the solver. It's just the vector f used in GLV calculations.
@@ -785,20 +765,20 @@ class OmicsGenerator:
 
                     # Get last value (modulo lag term) of node abundance
                     y = X[node_name][idx]
-                    
+
                      # f += yM (GLV equation)
                     interaction_coef += y @ M
 
                 except IndexError:
                     # Happens when lag is larger than number of values already generated
                     pass
-            
+
             # Interventions:
             intervention_coef = np.zeros(node.size)
             for intervention in node.interventions:
-                if intervention.affects_abundance == False:
+                if not intervention.affects_abundance:
                     intervention_coef += intervention.vector.dot(intervention.U[t])
-            
+
             # Self
             xt = X[node.name][-1]
 
@@ -808,16 +788,13 @@ class OmicsGenerator:
             return fn
 
         # Initialization steps
-        # X = {} # Latent absolute abundances
-        # Y = {} # Relative abundances/sampling probabilities
-        # Z = {} # Sampled abundances
         Z = {} # Latent absolute abundances
         X = {} # Probability distribution/normalized abundances
         Y = {} # Sampled abundances
 
         for node in self.nodes:
             Z[node.name] = [node.initial_value]
- 
+
         # Generalized Lotka-Volterra steps, plus bells and whistles
         for t in range(self._time_points - 1):
             Z_temp = {} # Use this so that all values are updated at once
@@ -843,21 +820,21 @@ class OmicsGenerator:
                         Zt += intervention.vector * intervention.U[t]
 
                 # Add biological noise:
-                noise = np.random.normal(scale=noise_var, size=node.size) 
+                noise = np.random.normal(scale=noise_var, size=node.size)
 
                 # No noise for missing taxa
                 noise = noise * (Zt > 0)
 
                 # Equivalent to log->add noise->exp
                 if node.log_noise == True:
-                    Zt *= np.exp(noise)                                   
+                    Zt *= np.exp(noise)
                 else:
                     Zt += noise
 
                 # Push to results
                 Zt = np.clip(Zt, 0, None)
                 Z_temp[node.name] = Zt
-            
+
             # Push all values for this time point to X at once
             for key in Z_temp:
                 Z[key] += [Z_temp[key]]
@@ -879,7 +856,7 @@ class OmicsGenerator:
             # Need to un-reverse the data now
             x = x[::-1]
 
-            # Relative abundances         
+            # Relative abundances
             x = np.apply_along_axis(lambda a: a/sum(a), 1, x)
             # y = y / np.sum(y, axis=1).reshape(-1,1)
 
@@ -903,16 +880,16 @@ class OmicsGenerator:
         return Z, X, Y
 
     def generate_multiple(
-        self, 
-        n : int, 
-        extinct_fraction : float = 0, 
+        self,
+        n : int,
+        extinct_fraction : float = 0,
         **generate_args) -> (list, list, list):
         """
-        Generates several timecourses of synthetic data. 
+        Generates several timecourses of synthetic data.
 
-        This is essentially a wrapper around a loop of generate() calls, with the added element of reinitializing 
+        This is essentially a wrapper around a loop of generate() calls, with the added element of reinitializing
         individuals. The extinct_fraction parameter gives some degree of control over re-initialization.
-        
+
         Args:
         -----
         n:
@@ -922,20 +899,20 @@ class OmicsGenerator:
 
         Additional args (same as generate()):
         -------------------------------------
-        noise_var:   
+        noise_var:
             Float. variance parameter for gaussian noise term.
         n_reads:
             Integer. Number of reads to draw from the unsampled distribution.
-        dt:         
+        dt:
             Float. time step size which gets passed to IVP solver
-        downsample: 
-            Integer. fraction of outputs to keep (1/n). By default, keeps all samples. downsample=4 means every 4th 
+        downsample:
+            Integer. fraction of outputs to keep (1/n). By default, keeps all samples. downsample=4 means every 4th
             sample is kept, etc. Downsample is deprecated. Simply modify "dt" instead.
 
         Returns:
         --------
         The following three arrays (in order):
-        
+
             //======================================================\\
             ||Name:   Sampling:   Normalization:  Number of samples:||
             ||======================================================||
@@ -943,8 +920,8 @@ class OmicsGenerator:
             ||X       unsampled   normalized      downsampled       ||
             ||Y       sampled     normalized      downsampled       ||
             \\======================================================//
-        
-        Each Z/X/Y array contains n dicts, each of which contains (node, timecourse) pairs. The timecourse is a numpy 
+
+        Each Z/X/Y array contains n dicts, each of which contains (node, timecourse) pairs. The timecourse is a numpy
         array with shape (number of time points, node size).
 
         Raises:
@@ -965,23 +942,23 @@ class OmicsGenerator:
                 # TODO: allow passing of any function to generate this
                 abundances = np.random.exponential(size=node.size) * np.random.binomial(1, 1-extinct_fraction, size=node.size)
                 self.set_initial_value(node.name, abundances, verbose=False)
-            
+
             Z,X,Y = self.generate(**generate_args)
             out_X.append(X)
             out_Y.append(Y)
             out_Z.append(Z)
-        
+
         # return nodes to old values
         self.nodes = old_nodes
 
         return out_Z, out_X, out_Y
 
     def _allesina_tang_normal_matrix(
-        self, 
-        n : int, 
-        C : float, 
-        d : float, 
-        sigma : float, 
+        self,
+        n : int,
+        C : float,
+        d : float,
+        sigma : float,
         rho : float) -> np.ndarray:
         """
         Generates an Allesina-Tang normal matrix.
@@ -1010,14 +987,14 @@ class OmicsGenerator:
             Float. Negative self-interaction size.
         sigma:
             Float. Variance used to generate multivariate normal covariance matrix.
-        rho: 
-            Float in [-1, 1]. Correlation term of covariance matrix. Higher rho = positive connectance = mutualism = 
+        rho:
+            Float in [-1, 1]. Correlation term of covariance matrix. Higher rho = positive connectance = mutualism =
             harder to stabilize. Lower rho = predator-prey--type relationships = easier to stabilize.
-        
+
         Returns:
         --------
         A matrix M that can be used as an interaction matrix.
-        
+
         Raises:
         -------
         None (fails silently).
@@ -1046,14 +1023,13 @@ class OmicsGenerator:
         M[np.diag_indices(n)] = -d
 
         return M
-    
+
     def _set_interactions(
         self,
-        C : float = 0.5, 
-        d : float = None, 
-        sigma : float = 1, 
-        rho : float = -0.4,
-        revise : bool = True) -> None:
+        C : float = 0.5,
+        d : float = None,
+        sigma : float = 1,
+        rho : float = -0.4) -> None:
         """
         Sets all interaction matrices from one big AT-normal matrix
 
@@ -1065,14 +1041,14 @@ class OmicsGenerator:
             Float. Negative self-interaction size.
         sigma:
             Float. Variance used to generate multivariate normal covariance matrix.
-        rho: 
-            Float in [-1, 1]. Correlation term of covariance matrix. Higher rho = positive connectance = mutualism = 
+        rho:
+            Float in [-1, 1]. Correlation term of covariance matrix. Higher rho = positive connectance = mutualism =
             harder to stabilize. Lower rho = predator-prey--type relationships = easier to stabilize.
-        
+
         Returns:
         --------
         None (modifies generator in place).
-        
+
         Raises:
         -------
         None (fails silently).
@@ -1081,10 +1057,9 @@ class OmicsGenerator:
         # Generate master matrix
         sizes = [node.size for node in self.nodes]
         n = np.sum(sizes)
-        n_nodes = len(sizes)
 
         # Solve for a stable value of d if d is not provided
-        if d == None:
+        if d is None:
             d = sigma * np.sqrt(n * C) + 1
 
         m0 = self._allesina_tang_normal_matrix(n, C, d, sigma, rho)
@@ -1096,20 +1071,18 @@ class OmicsGenerator:
             for node2 in self.nodes:
                 m_ij = m0[i:i + node1.size, j:j + node2.size]
                 self.add_interaction(
-                    f"{node1.name}->{node2.name}", 
-                    node1.name, 
-                    node2.name, 
+                    f"{node1.name}->{node2.name}",
+                    node1.name,
+                    node2.name,
                     m_ij
                 )
 
-                if self._silent == False:
+                if not self._silent:
                     print(f"set m:({node1.name})->({node2.name}):   {i}:{i + node1.size}    {j}:{j + node2.size}")
 
                 j += node2.size
             i += node1.size
 
-        return None
-    
     def _init_full(
         self,
         dist : None = np.random.exponential,
@@ -1131,26 +1104,26 @@ class OmicsGenerator:
         None
         """
 
+        # TODO: make use of dist argument
+
         self._set_interactions(**kwargs)
         for node in self.nodes:
             self.set_initial_value(
-                node.name, 
+                node.name,
                 np.random.exponential(size=node.size)
             )
             self.set_initial_value(
-                node.name, 
+                node.name,
                 2 * (0.5 - np.random.rand(node.size)),
                 growth_rate=True
             )
-        
-        return None
 
     def case_control(
         self,
-        participants : int, 
+        participants : int,
         case_frac : float,
         node_name: str,
-        effect_size : float, 
+        effect_size : float,
         **generate_args) -> (list, list, list, list, list, list):
         """
         Generates synthetic case and control timecourses.
@@ -1167,7 +1140,7 @@ class OmicsGenerator:
             Float. Magnitude of intervention.
         **kwargs:
             Arguments that get passed to generate_multiple().
-        
+
         Returns:
         --------
         Z_control:
@@ -1182,7 +1155,7 @@ class OmicsGenerator:
             X-list like generate_multiple() for case group.
         Y_case:
             Y-list like generate_multiple() for case group.
-        
+
         Raises:
         -------
         TODO
@@ -1200,10 +1173,10 @@ class OmicsGenerator:
         node_size = self.get(node_name).size
 
         case_gen.add_intervention(
-            name='CASE', 
-            node_name=node_name, 
-            vector=effect_size * (0.5-np.random.rand(node_size)), 
-            start=0, 
+            name='CASE',
+            node_name=node_name,
+            vector=effect_size * (0.5-np.random.rand(node_size)),
+            start=0,
             end=self._time_points
         )
         z_case, x_case, y_case = case_gen.generate_multiple(n_cases, **generate_args)
@@ -1229,10 +1202,10 @@ class OmicsGenerator:
 
         return deepcopy(self)
 
-    def _save_single(self, 
-        data : "generator output", 
-        path : str = None, 
-        delim : str = "\t", 
+    def _save_single(self,
+        data : "generator output",
+        path : str = None,
+        delim : str = "\t",
         ext : str = ".tsv") -> None:
         """
         Helper function. Saves a single timecourse.
@@ -1241,7 +1214,7 @@ class OmicsGenerator:
             data_t = data[node].transpose()
 
             names = self.get(node).names
-            if names == None:
+            if names is None:
                 names = [f"{node}_{x}" for x in range(data_t.shape[0])]
 
             sample_names = [f"S_{x}" for x in range(data_t.shape[1])]
@@ -1250,21 +1223,18 @@ class OmicsGenerator:
             data_joined = np.column_stack([names, data_t])
 
             np.savetxt(
-                f"{path}{node}.{ext}", 
+                f"{path}{node}.{ext}",
                 data_joined,
-                fmt="%-12s", 
+                fmt="%-12s",
                 delimiter=delim,
                 header=header,
             )
 
-        return None
-
-
-    def save(self, 
-        data : "generator output", 
+    def save(self,
+        data : "generator output",
         output_path : str = ".",
         prefix : str = "",
-        delim : str = "\t", 
+        delim : str = "\t",
         ext : str = "tsv") -> None:
         """
         Saves generator outputs (single or multiple timecourses) as a text file/files.
@@ -1294,32 +1264,29 @@ class OmicsGenerator:
 
         # Path handling
         save_id = uuid4()
-        if output_path == None:
+        if output_path is None:
             output_path = f"./{save_id}"
         try:
             mkdir(output_path)
-        except FileExistsError:
-            raise SavePathExistsException("f{output_path} already exists.")
+        except FileExistsError as e:
+            raise FileExistsError("f{output_path} already exists.") from e # re-raise error
 
         # Multiple outputs
-        if type(data) == list:
-            for i in range(len(data)):
-                if self._silent == False:
-                    print(f"\tSaving individual {i} in directory {output_path}/{i}/")
-                individual = data[i]
-                
+        if isinstance(data, list):
+            for idx, individual in enumerate(data):
+                if not self._silent:
+                    print(f"\tSaving individual {idx} in directory {output_path}/{idx}/")
+
                 # Check correct nested datatypes
-                if type(individual) != dict:
+                if not isinstance(individual, dict):
                     raise Exception(f"Wrong datatype: submitted list of {type(individual)}, expected list of dicts.")
 
-                mkdir(f"{output_path}/{i}")
-                self._save_single(individual, f"{output_path}/{i}/{prefix}{i}", delim, ext)
-            return None
+                mkdir(f"{output_path}/{idx}")
+                self._save_single(individual, f"{output_path}/{idx}/{prefix}{idx}", delim, ext)
 
         # Single output
-        elif type(data) == dict:
+        elif isinstance(data, dict):
             self._save_single(data, f"{output_path}/{prefix}", delim, ext)
-            return None
 
     def __str__(self):
         # TODO: Rewrite this more cleanly with f-strings

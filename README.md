@@ -5,6 +5,22 @@ Microbiome Synthetic Data Engine for Experimental Design
 
 # Misdeed command-line interface
 
+## Usage
+MiSDEED is used as follows:
+```bash
+    ./misdeed [-h] node_sizes [-iNtDCPVRnevrTdciE] [--options]
+```
+Here the `node_sizes` positional parameter is a comma-separated list of integers. To see MiSDEED parameters, run the following command:
+```bash
+./misdeed -h
+```
+
+## Dependencies
+Dependencies are listed in `requirements.txt` and can be installed using
+```bash
+pip install -r requirements.txt
+```
+
 ## Example
 ```bash
 git clone https://github.com/pchlenski/misdeed
@@ -32,18 +48,6 @@ pip install -r requirements.txt
 ./misdeed 10,15,20 --n_samples 10 --case_fraction 0.5 --plot --pca
 ```
 
-## Dependencies
-Dependencies are listed in `requirements.txt` and can be installed using
-```bash
-pip install -r requirements.txt
-```
-
-## Parameters
-To see MiSDEED parameters, run the following command:
-```bash
-./misdeed -h
-```
-
 ## Inputs
 If using the ```--input_dir``` parameter, MiSDEED will assume your input directory follows these conventions:
 * All files are in tsv (tab-separated values) format and end in ".tsv"
@@ -62,6 +66,8 @@ If using the ```--input_dir``` parameter, MiSDEED will assume your input directo
     * Interactions are named ```[outbound_node_name]->[inbound_node_name].tsv```
     * At least one interaction is defined
     * Interaction matrix has shape (outbound node dimensionality) x (inbound node dimensionality)
+
+The `example` directory in this repository contains a minimal example of these conventions.
 
 ## Outputs
 By default, MiSDEED will save results to the `./output` directory as follows:

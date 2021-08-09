@@ -17,11 +17,14 @@ from src.OmicsGenerator import OmicsGenerator
 from src.visualization import plot_timecourse
 from src.visualization import plot_pca
 
-class options:
+class MisdeedOptions:
+    """
+    DOCSTRING
+    """
     def __init__(self):
         parser = argparse.ArgumentParser(
             description=f"MiSDEED (v{__version__}): microbiome synthetic data engine for experimental design",
-            usage = "misdeed [-h] [-iNtDCPVRnevrTdciE] [--options] node_sizes output_directory",
+            usage = "misdeed [-h] node_sizes [-iNtDCPVRnevrTdciE] [--options]",
         )
 
         # Generator params
@@ -33,7 +36,8 @@ class options:
             "-i", "--input_dir",
             default=None,
             metavar="",
-            help="""Path to a directory containing GLV parameters. Directory should have the following naming conventions:
+            help="""Path to a directory containing GLV parameters. Directory should have the following naming
+            conventions:
             directory/[node_name]->[node_name].csv (interaction matrix), 
             directory/[node_name]_g.csv (growth rates)
             directory/[node_name]_x0.csv (initial abundances). 
@@ -86,14 +90,16 @@ class options:
             type=float,
             default=1,
             metavar="",
-            help="Variance for multivariate normal distribution for generating interaction matrix. Not used if --input_dir is set."
+            help="""Variance for multivariate normal distribution for generating interaction matrix. Not used if
+            --input_dir is set."""
         )
         parser.add_argument(
             "-R", "--correlation",
             type=float,
             default=-0.4,
             metavar="",
-            help="Correlation (rho) for multivariate normal distribution for generating interaction matrix. Not used if --input_dir is set."
+            help="""Correlation (rho) for multivariate normal distribution for generating interaction matrix. Not used
+            if --input_dir is set."""
         )
 
         # Simulation params
@@ -182,11 +188,11 @@ class options:
 
         # Process args
         args = parser.parse_args(sys.argv[1:])
-        
+
         node_sizes = [int(x) for x in args.node_sizes.split(",")]
 
-        if args.node_names == None:
-            node_names = []
+        if args.node_names is None:
+            node_names = None
         else:
             node_names = args.node_names.split(",")
 
@@ -195,7 +201,7 @@ class options:
         print()
 
         # Set automatic GLV parameters
-        if args.input_dir == None:
+        if args.input_dir is None:
             gen = OmicsGenerator(
                 nodes=node_names,
                 node_sizes=node_sizes,
@@ -269,15 +275,15 @@ class options:
             if U.keys() != B.keys():
                 print("U:", U.keys())
                 print("B:", B.keys())
-                raise Exception("Intervention U and B vectors are not the same. Check that _b.tsv and _u.tsv are paired.")
-            else:
-                for intervention_name in U:
-                    gen.add_intervention(
-                        name=intervention_name,
-                        node_name=intervention_nodes[intervention_name],
-                        vector=B[intervention_name],
-                        U=U[intervention_name]
-                    )
+                raise Exception("U and B vectors are not the same. Check that _b.tsv and _u.tsv are paired.")
+
+            for intervention_name in U:
+                gen.add_intervention(
+                    name=intervention_name,
+                    node_name=intervention_nodes[intervention_name],
+                    vector=B[intervention_name],
+                    U=U[intervention_name]
+                )
 
         print(gen)
 
@@ -285,7 +291,7 @@ class options:
         print()
         # Run generator
         if args.n_samples == 1:
-            print(f"Generating single sample...")
+            print("Generating single sample...")
             z, x, y = gen.generate(
                 noise_var=args.noise_variance,
                 n_reads=args.n_reads,
@@ -305,8 +311,8 @@ class options:
         else:
             print(f"Generating {args.n_samples} samples (case-control)...")
 
-            if args.intervention_node == None:
-                args.intervention_node = gen.nodes[0].name 
+            if args.intervention_node is None:
+                args.intervention_node = gen.nodes[0].name
 
             z_control, x_control, y_control, z_case, x_case, y_case = gen.case_control(
                 args.n_samples,
@@ -348,7 +354,7 @@ class options:
             gen.save(y_case, f"{path}/case/Y")
 
         # Save plots
-        if args.plot == True:
+        if args.plot:
             print("Plotting timecourses")
 
             # Single plot case
@@ -362,8 +368,7 @@ class options:
             # Multiple plot case, no case-control
             elif args.case_fraction == 0:
                 os.mkdir(f"{path}/plots")
-                for idx in range(len(y)):
-                    sample = y[idx]
+                for idx, sample in enumerate(y):
                     for node in sample:
                         plot = plot_timecourse(sample[node])
                         plt.title(f"Individual {idx}, node {node}", y=1.0, pad=30)
@@ -390,7 +395,7 @@ class options:
                         plt.savefig(f"{path}/case/plots/{idx}_{node}")
 
         # Save PCA
-        if args.pca == True:
+        if args.pca:
             print("Plotting PCA")
             os.mkdir(f"{path}/pca")
 
@@ -409,13 +414,8 @@ class options:
 
             for node in nodes:
                 plt.cla()
-                plot = plot_pca(to_plot, node, colors=colors)
+                plot_pca(to_plot, node, colors=colors)
                 print(f"\tSaving PCA for node {node} in {path}/pca/{node}.png")
                 plt.savefig(f"{path}/pca/{node}")
 
-
-
-
-
-
-options()
+MisdeedOptions()

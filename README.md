@@ -48,13 +48,21 @@ To see MiSDEED parameters, run the following command:
 ## Inputs
 If using the ```--input_dir``` parameter, MiSDEED will assume your input directory follows these conventions:
 * All files are in tsv (tab-separated values) format and end in ".tsv"
-* Node conventions
-    * Node initial abundances are named ```[node_name]_x0.tsv```
-    * Node growth rates are named ```[node_name]_g.tsv```
-* Each node has a growth rate and a node name
-* Intervention magnitudes are named ```[intervention_name]_[node_name]_u.tsv```
-* Intervention responses are named ```[intervention_name]_[node_name]_b.tsv```
-* Interactions are named ```[outbound_node_name]->[inbound_node_name].tsv```
+* Node conventions:
+    * Initial abundances are named ```[node_name]_x0.tsv```
+    * Growth rates are named ```[node_name]_g.tsv```
+    * Each node has a growth rate and a node name
+    * Initial abundances and growth rates are equal to node dimensionality
+* Intervention conventions:
+    * Intervention magnitudes are named ```[intervention_name]_[node_name]_u.tsv```
+    * Node responses are named ```[intervention_name]_[node_name]_b.tsv```
+    * Each intervention has a growth rate and a node name
+    * Intervention magnitude dimensionality is equal to number of time points (set by ```--time_points``` parameter)
+    * Node response dimensionality is equal to node dimensionality
+* Interaction conventions:
+    * Interactions are named ```[outbound_node_name]->[inbound_node_name].tsv```
+    * At least one interaction is defined
+    * Interaction matrix has shape (outbound node dimensionality) x (inbound node dimensionality)
 
 ## Outputs
 By default, MiSDEED will save results to the `./output` directory as follows:

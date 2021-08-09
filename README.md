@@ -45,12 +45,23 @@ To see MiSDEED parameters, run the following command:
 ./misdeed -h
 ```
 
-## Output structure
+## Inputs
+If using the ```--input_dir``` parameter, MiSDEED will assume your input directory follows these conventions:
+* All files are in tsv (tab-separated values) format and end in ".tsv"
+* Node conventions
+    * Node initial abundances are named ```[node_name]_x0.tsv```
+    * Node growth rates are named ```[node_name]_g.tsv```
+* Each node has a growth rate and a node name
+* Intervention magnitudes are named ```[intervention_name]_[node_name]_u.tsv```
+* Intervention responses are named ```[intervention_name]_[node_name]_b.tsv```
+* Interactions are named ```[outbound_node_name]->[inbound_node_name].tsv```
+
+## Outputs
 By default, MiSDEED will save results to the `./output` directory as follows:
 
 ### Single sample
 ```
-./output
+output
 `---[UUID]
     |---X
     |   |---[node_0_name].tsv
@@ -76,7 +87,7 @@ By default, MiSDEED will save results to the `./output` directory as follows:
 
 ### Multiple samples
 ```
-./output
+output
 `---[UUID]
     |---X
     |   |---0
@@ -123,7 +134,7 @@ By default, MiSDEED will save results to the `./output` directory as follows:
 
 ### Case-control
 ```
-./output
+output
 `---[UUID]
     |---case
     |   |---X

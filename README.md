@@ -1,13 +1,10 @@
 # MiSDEED: Microbial Synthetic Data Engine for Experimental Design
 Microbiome data simulator for power analysis
 
-<!-- generator schematic goes here -->
+![Diagram](./img/diagram.png)
 <!-- example synthetic data goes here -->
 
 # Misdeed command-line interface
-
-![Diagram](./img/diagram.png)
-
 
 ## Example
 ```bash

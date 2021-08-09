@@ -6,6 +6,9 @@ Microbiome data simulator for power analysis
 
 # Misdeed command-line interface
 
+![Diagram](./img/diagram.png)
+
+
 ## Example
 ```bash
 git clone https://github.com/pchlenski/misdeed

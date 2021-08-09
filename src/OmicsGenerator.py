@@ -504,8 +504,6 @@ class OmicsGenerator:
         TODO
         """
 
-        print("U:", type(U), U)
-
         # Check namespace
         if name in self._namespace:
             raise Exception(f"Name {name} already in use. Please use a unique name")

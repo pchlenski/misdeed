@@ -30,11 +30,7 @@ class options:
             help="Number of dimensions for each node, separated by commas"
         )
         parser.add_argument(
-            "output_path",
-            help="Directory in which to store synthetic data"
-        )
-        parser.add_argument(
-            "-i", "--parameter_dir",
+            "-i", "--input_dir",
             default=None,
             metavar="",
             help="""Path to a directory containing GLV parameters. Directory should have the following naming conventions:
@@ -42,6 +38,12 @@ class options:
             directory/[node_name]_g.csv (growth rates)
             directory/[node_name]_x0.csv (initial abundances). 
             Mutually exclusive with --connectivity, --self_penalty, --variance, and --correlation."""
+        )
+        parser.add_argument(
+            "-o", "--output_dir",
+            default="./output",
+            metavar="",
+            help="Directory in which to store synthetic data"
         )
         parser.add_argument(
             "-N", "--node_names",
@@ -70,28 +72,28 @@ class options:
             type=float,
             default=0.5,
             metavar="",
-            help="Connectivity (1-sparsity) for generating interaction matrix. Not used if --parameter_dir is set."
+            help="Connectivity (1-sparsity) for generating interaction matrix. Not used if --input_dir is set."
         )
         parser.add_argument(
-            "-P", "--self-penalty",
+            "-P", "--self_penalty",
             type=float,
             default=None,
             metavar="",
-            help="Self-penalty for generating interaction matrix. Not used if --parameter_dir is set."
+            help="Self-penalty for generating interaction matrix. Not used if --input_dir is set."
         )
         parser.add_argument(
             "-V", "--variance",
             type=float,
             default=1,
             metavar="",
-            help="Variance for multivariate normal distribution for generating interaction matrix. Not used if --parameter_dir is set."
+            help="Variance for multivariate normal distribution for generating interaction matrix. Not used if --input_dir is set."
         )
         parser.add_argument(
             "-R", "--correlation",
             type=float,
             default=-0.4,
             metavar="",
-            help="Correlation (rho) for multivariate normal distribution for generating interaction matrix. Not used if --parameter_dir is set."
+            help="Correlation (rho) for multivariate normal distribution for generating interaction matrix. Not used if --input_dir is set."
         )
 
         # Simulation params
@@ -168,7 +170,7 @@ class options:
             help="Save plots of timecourses in output directory."
         )
         parser.add_argument(
-            "--pca",
+            "-a", "--pca",
             action="store_true",
             help="Save PCA plot of all timecourses in output directory"
         )
@@ -193,7 +195,7 @@ class options:
         print()
 
         # Set automatic GLV parameters
-        if args.parameter_dir == None:
+        if args.input_dir == None:
             gen = OmicsGenerator(
                 nodes=node_names,
                 node_sizes=node_sizes,
@@ -217,13 +219,13 @@ class options:
             U = {} # intervention u vectors
             B = {} # intervention b vectors
             intervention_nodes = {} # which nodes are affected
-            for filename in os.listdir(args.parameter_dir):
+            for filename in os.listdir(args.input_dir):
 
                 if not filename.endswith(".tsv") and not filename.endswith(".csv"):
                     pass # Ignore all non-csv files
 
                 elif filename.find("->") != -1:
-                    matrix = np.loadtxt(f"{args.parameter_dir}/{filename}")
+                    matrix = np.loadtxt(f"{args.input_dir}/{filename}")
                     matrix_name = filename.split(".tsv")[0]
                     out_name, in_name = matrix_name.split("->")
                     print(f"Setting matrix '{matrix_name}' from {filename}...")
@@ -235,26 +237,26 @@ class options:
                     )
 
                 elif filename.endswith("_g.tsv"):
-                    g = np.loadtxt(f"{args.parameter_dir}/{filename}")
+                    g = np.loadtxt(f"{args.input_dir}/{filename}")
                     node_name = filename.split("_g.tsv")[0]
                     print(f"Setting growth rates for node '{node_name}' from {filename}...")
                     gen.set_initial_value(node_name, g, growth_rate=True)
 
                 elif filename.endswith("_x0.tsv"):
-                    x0 = np.loadtxt(f"{args.parameter_dir}/{filename}")
+                    x0 = np.loadtxt(f"{args.input_dir}/{filename}")
                     node_name = filename.split("_x0.tsv")[0]
                     print(f"Setting initial abundances for node '{node_name}' from {filename}...")
                     gen.set_initial_value(node_name, x0)
 
                 elif filename.endswith("_u.tsv"):
-                    u = np.loadtxt(f"{args.parameter_dir}/{filename}")
+                    u = np.loadtxt(f"{args.input_dir}/{filename}")
                     temp_name = filename.split("_u.tsv")[0]
                     intervention_name, node_name = temp_name.split("_")
                     U[intervention_name] = u
                     intervention_nodes[intervention_name] = node_name
 
                 elif filename.endswith("_b.tsv"):
-                    b = np.loadtxt(f"{args.parameter_dir}/{filename}")
+                    b = np.loadtxt(f"{args.input_dir}/{filename}")
                     temp_name = filename.split("_b.tsv")[0]
                     intervention_name, node_name = temp_name.split("_")
                     B[intervention_name] = b
@@ -323,11 +325,11 @@ class options:
         print()
 
         try:
-            os.mkdir(args.output_path)
+            os.mkdir(args.output_dir)
         except FileExistsError:
-            print(f"output path {args.output_path} already exists. Creating subdirectories.")
+            print(f"output path {args.output_dir} already exists. Creating subdirectories.")
 
-        path = f"{args.output_path}/{uuid4()}"
+        path = f"{args.output_dir}/{uuid4()}"
         os.mkdir(path)
         print(f"Created directory {path}")
 
@@ -354,8 +356,8 @@ class options:
                 os.mkdir(f"{path}/plots")
                 for node in y:
                     plot = plot_timecourse(y[node])
-                    print(f"\tSaving plot for individual 0, node '{node}' in {path}/plots/0_{node}.png")
-                    plt.savefig(f"{path}/plots/0_{node}")
+                    print(f"\tSaving plot for individual 0, node '{node}' in {path}/plots/{node}.png")
+                    plt.savefig(f"{path}/plots/{node}")
 
             # Multiple plot case, no case-control
             elif args.case_fraction == 0:

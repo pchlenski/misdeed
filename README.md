@@ -31,7 +31,6 @@ pip install -r requirements.txt
 
 # generate and plot case-control trajectories
 ./misdeed 10,15,20 --n_samples 10 --case_fraction 0.5 --plot --pca
-# 
 ```
 
 ## Dependencies
@@ -52,160 +51,160 @@ By default, MiSDEED will save results to the `./output` directory as follows:
 ### Single sample
 ```
 ./output
-+---[UUID]
-|   +---X
-|   |   +---[node_0_name].tsv
-|   |   +---[node_1_name].tsv
-|   |   \---...
-|   +---Y
-|   |   +---[node_0_name].tsv
-|   |   +---[node_1_name].tsv
-|   |   \---...
-|   +---Z
-|   |   +---[node_0_name].tsv
-|   |   +---[node_1_name].tsv
-|   |   \---...
-|   +---pca
-|   |   +---[node_0_name].png
-|   |   +---[node_1_name].png
-|   |   \---...
-|   +---plots
-|   |   +---[node_0_name].png
-|   |   +---[node_1_name].png
-\   \   \---...
+`---[UUID]
+    |---X
+    |   |---[node_0_name].tsv
+    |   |---[node_1_name].tsv
+    |   `---...
+    |---Y
+    |   |---[node_0_name].tsv
+    |   |---[node_1_name].tsv
+    |   `---...
+    |---Z
+    |   |---[node_0_name].tsv
+    |   |---[node_1_name].tsv
+    |   `---...
+    |---pca
+    |   |---[node_0_name].png
+    |   |---[node_1_name].png
+    |   `---...
+    `---plots
+        |---[node_0_name].png
+        |---[node_1_name].png
+        `---...
 ```
 
 ### Multiple samples
 ```
 ./output
-+---[UUID]
-|   +---X
-|   |   +---0
-|   |   |   +---[node_0_name].tsv
-|   |   |   +---[node_1_name].tsv
-|   |   |   \---...
-|   |   +---1
-|   |   |   +---[node_0_name].tsv
-|   |   |   +---[node_1_name].tsv
-|   |   |   \---...
-|   |   +---...
-|   +---Y
-|   |   +---0
-|   |   |   +---[node_0_name].tsv
-|   |   |   +---[node_1_name].tsv
-|   |   |   \---...
-|   |   +---1
-|   |   |   +---[node_0_name].tsv
-|   |   |   +---[node_1_name].tsv
-|   |   |   \---...
-|   |   +---...
-|   +---Z
-|   |   +---0
-|   |   |   +---[node_0_name].tsv
-|   |   |   +---[node_1_name].tsv
-|   |   |   \---...
-|   |   +---1
-|   |   |   +---[node_0_name].tsv
-|   |   |   +---[node_1_name].tsv
-|   |   |   \---...
-|   |   +---...
-|   +---pca
-|   |   +---[node_0_name].png
-|   |   +---[node_1_name].png
-|   |   \---...
-|   +---plots
-|   |   +---0_[node_0_name].png
-|   |   +---0_[node_1_name].png
-|   |   +---...
-|   |   +---1_[node_0_name].png
-|   |   +---1_[node_1_name].png
-\   \   \---...
+`---[UUID]
+    |---X
+    |   |---0
+    |   |   |---[node_0_name].tsv
+    |   |   |---[node_1_name].tsv
+    |   |   `---...
+    |   |---1
+    |   |   |---[node_0_name].tsv
+    |   |   |---[node_1_name].tsv
+    |   |   `---...
+    |   `---...
+    |---Y
+    |   |---0
+    |   |   |---[node_0_name].tsv
+    |   |   |---[node_1_name].tsv
+    |   |   `---...
+    |   |---1
+    |   |   |---[node_0_name].tsv
+    |   |   |---[node_1_name].tsv
+    |   |   `---...
+    |   `---...
+    |---Z
+    |   |---0
+    |   |   |---[node_0_name].tsv
+    |   |   |---[node_1_name].tsv
+    |   |   `---...
+    |   |---1
+    |   |   |---[node_0_name].tsv
+    |   |   |---[node_1_name].tsv
+    |   |   `---...
+    |   `---...
+    |---pca
+    |   |---[node_0_name].png
+    |   |---[node_1_name].png
+    |   `---...
+    `---plots
+        |---0_[node_0_name].png
+        |---0_[node_1_name].png
+        |---...
+        |---1_[node_0_name].png
+        |---1_[node_1_name].png
+        `---...
 ```
 
 ### Case-control
 ```
 ./output
-+---[UUID]
-|   +---case
-|   |   +---X
-|   |   |   +---0
-|   |   |   |   +---[node_0_name].tsv
-|   |   |   |   +---[node_1_name].tsv
-|   |   |   |   \---...
-|   |   |   +---1
-|   |   |   |   +---[node_0_name].tsv
-|   |   |   |   +---[node_1_name].tsv
-|   |   |   |   \---...
-|   |   |   +---...
-|   |   +---Y
-|   |   |   +---0
-|   |   |   |   +---[node_0_name].tsv
-|   |   |   |   +---[node_1_name].tsv
-|   |   |   |   \---...
-|   |   |   +---1
-|   |   |   |   +---[node_0_name].tsv
-|   |   |   |   +---[node_1_name].tsv
-|   |   |   |   \---...
-|   |   |   +---...
-|   |   +---Z
-|   |   |   +---0
-|   |   |   |   +---[node_0_name].tsv
-|   |   |   |   +---[node_1_name].tsv
-|   |   |   |   \---...
-|   |   |   +---1
-|   |   |   |   +---[node_0_name].tsv
-|   |   |   |   +---[node_1_name].tsv
-|   |   |   |   \---...
-|   |   |   +---...
-|   |   +---plots
-|   |   |   +---0_[node_0_name].png
-|   |   |   +---0_[node_1_name].png
-|   |   |   +---...
-|   |   |   +---1_[node_0_name].png
-|   |   |   +---1_[node_1_name].png
-|   |   \   \---...
-|   +---control
-|   |   +---X
-|   |   |   +---0
-|   |   |   |   +---[node_0_name].tsv
-|   |   |   |   +---[node_1_name].tsv
-|   |   |   |   \---...
-|   |   |   +---1
-|   |   |   |   +---[node_0_name].tsv
-|   |   |   |   +---[node_1_name].tsv
-|   |   |   |   \---...
-|   |   |   +---...
-|   |   +---Y
-|   |   |   +---0
-|   |   |   |   +---[node_0_name].tsv
-|   |   |   |   +---[node_1_name].tsv
-|   |   |   |   \---...
-|   |   |   +---1
-|   |   |   |   +---[node_0_name].tsv
-|   |   |   |   +---[node_1_name].tsv
-|   |   |   |   \---...
-|   |   |   +---...
-|   |   +---Z
-|   |   |   +---0
-|   |   |   |   +---[node_0_name].tsv
-|   |   |   |   +---[node_1_name].tsv
-|   |   |   |   \---...
-|   |   |   +---1
-|   |   |   |   +---[node_0_name].tsv
-|   |   |   |   +---[node_1_name].tsv
-|   |   |   |   \---...
-|   |   |   +---...
-|   |   +---plots
-|   |   |   +---0_[node_0_name].png
-|   |   |   +---0_[node_1_name].png
-|   |   |   +---...
-|   |   |   +---1_[node_0_name].png
-|   |   |   +---1_[node_1_name].png
-|   |   \   \---...
-|   +---pca
-|   |   +---[node_0_name].png
-|   |   +---[node_1_name].png
-\   \   \---...
+`---[UUID]
+    |---case
+    |   |---X
+    |   |   |---0
+    |   |   |   |---[node_0_name].tsv
+    |   |   |   |---[node_1_name].tsv
+    |   |   |   `---...
+    |   |   |---1
+    |   |   |   |---[node_0_name].tsv
+    |   |   |   |---[node_1_name].tsv
+    |   |   |   `---...
+    |   |   `---...
+    |   |---Y
+    |   |   |---0
+    |   |   |   |---[node_0_name].tsv
+    |   |   |   |---[node_1_name].tsv
+    |   |   |   `---...
+    |   |   |---1
+    |   |   |   |---[node_0_name].tsv
+    |   |   |   |---[node_1_name].tsv
+    |   |   |   `---...
+    |   |   |---...
+    |   |---Z
+    |   |   |---0
+    |   |   |   |---[node_0_name].tsv
+    |   |   |   |---[node_1_name].tsv
+    |   |   |   `---...
+    |   |   |---1
+    |   |   |   |---[node_0_name].tsv
+    |   |   |   |---[node_1_name].tsv
+    |   |   |   `---...
+    |   |   `---...
+    |   `---plots
+    |       |---0_[node_0_name].png
+    |       |---0_[node_1_name].png
+    |       |---...
+    |       |---1_[node_0_name].png
+    |       |---1_[node_1_name].png
+    |       `---...
+    |---control
+    |   |---X
+    |   |   |---0
+    |   |   |   |---[node_0_name].tsv
+    |   |   |   |---[node_1_name].tsv
+    |   |   |   `---...
+    |   |   |---1
+    |   |   |   |---[node_0_name].tsv
+    |   |   |   |---[node_1_name].tsv
+    |   |   |   `---...
+    |   |   `---...
+    |   |---Y
+    |   |   |---0
+    |   |   |   |---[node_0_name].tsv
+    |   |   |   |---[node_1_name].tsv
+    |   |   |   `---...
+    |   |   |---1
+    |   |   |   |---[node_0_name].tsv
+    |   |   |   |---[node_1_name].tsv
+    |   |   |   `---...
+    |   |   `---...
+    |   |---Z
+    |   |   |---0
+    |   |   |   |---[node_0_name].tsv
+    |   |   |   |---[node_1_name].tsv
+    |   |   |   `---...
+    |   |   |---1
+    |   |   |   |---[node_0_name].tsv
+    |   |   |   |---[node_1_name].tsv
+    |   |   |   `---...
+    |   |   `---...
+    |   `---plots
+    |       |---0_[node_0_name].png
+    |       |---0_[node_1_name].png
+    |       |---...
+    |       |---1_[node_0_name].png
+    |       |---1_[node_1_name].png
+    |       `---...
+    `---pca
+        |---[node_0_name].png
+        |---[node_1_name].png
+        `---...
 
 ```
 

@@ -353,5 +353,16 @@ for i in range(15):
 ![Using learned parameters](./img/ex4.png)
 
 
-## Citation
-TODO
+# MiSDEED paper and citation
+
+The preprint for MiSDEED is available [on bioRxiv](https://doi.org/10.1101/2021.08.09.455682). It can be cited as follows:
+````
+@article {chlenski2021misdeed,
+    author = {Chlenski, Philippe and Hsu, Melody and Pe'er, Itsik},
+    title = {MiSDEED: a synthetic multi-omics engine for microbiome power analysis and study design},
+    year = {2021},
+    doi = {10.1101/2021.08.09.455682},
+    publisher = {Cold Spring Harbor Laboratory},
+    journal = {bioRxiv}
+}
+```

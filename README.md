@@ -260,9 +260,8 @@ The corresponding Jupyter notebook can be found at `notebooks/examples.ipynb`.
 ```python
 # initialize generator:
 gen = OmicsGenerator(
-    100,                   # 100 time points
-    ['mgx', 'mbx'],        # 2 nodes named 'mgx' and 'mbx'
-    [15, 15],              # each node has 15 dimensions
+    nodes=['mgx', 'mbx'],  # 2 nodes named 'mgx' and 'mbx'
+    node_sizes=[15, 15],   # each node has 15 dimensions
     init_full=True         # set interaction matrices and growth rates randomly
 )
 
@@ -306,9 +305,8 @@ plot_pca([y3_control, y3_case], 'mgx', colors=['red', 'blue'], plot_trajectories
 ```python
 # run case-control and plot:
 gen4 = OmicsGenerator(
-    100,                   # 100 time points
-    ['mgx'],               # 1 nodes named 'mgx'
-    [15],                  # 'mgx' has 8 dimensions
+    nodes=['mgx'],         # 1 node named 'mgx'
+    node_sizes=[15],       # 'mgx' has 15 dimensions
     init_full=True         # set interaction matrices and growth rates randomly
 )
 
@@ -335,7 +333,7 @@ M, u, E = infer_glv_params(
 )
 
 # build inferred generator
-gen4_inferred = OmicsGenerator(100, ['mgx'], [15])
+gen4_inferred = OmicsGenerator(nodes=['mgx'], node_sizes=[15])
 gen4_inferred.add_interaction('M', 'mgx', 'mgx', M)
 gen4_inferred.add_intervention('int1', 'mgx', E.reshape(-1), start=50, end=100)
 gen4_inferred.set_initial_value('mgx', u.reshape(-1), growth_rate=True)

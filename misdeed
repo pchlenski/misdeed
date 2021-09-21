@@ -24,7 +24,7 @@ class MisdeedOptions:
     def __init__(self):
         parser = argparse.ArgumentParser(
             description=f"MiSDEED (v{__version__}): microbiome synthetic data engine for experimental design",
-            usage = "misdeed [-h] node_sizes [-iNtDCPVRnevrTdciE] [--options]",
+            usage = "misdeed [-h] node_sizes [-hioNtDCPVRnevrTdcIEpa] [--options]",
         )
 
         # Generator params

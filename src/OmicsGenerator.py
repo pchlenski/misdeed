@@ -5,6 +5,7 @@ Module docstring
 from copy import deepcopy
 from uuid import uuid4
 from os import mkdir
+from functools import partial
 
 import numpy as np
 from scipy.integrate import solve_ivp
@@ -698,6 +699,7 @@ class OmicsGenerator:
     def generate(
         self,
         noise_var : float = 1e-2,
+        noise_distribution : callable = None,
         n_reads : int = 1e5,
         dt : float = 1e-2,
         downsample : int = 1) -> (dict, dict, dict):
@@ -707,13 +709,16 @@ class OmicsGenerator:
         Args:
         -----
         noise_var:
-            Float. variance parameter for gaussian noise term.
+            Float. Variance parameter for gaussian noise term. Does nothing if noise_generator is specified.
+        noise_distribution:
+            [Experimental] Callable. A function to sample biological noise from a distribution. Should have a 'size' 
+            parameter. If not set, creates a Gaussian distribution centered at 0 with variance noise_var.
         n_reads:
             Integer. Number of reads to draw from the unsampled distribution.
         dt:
-            Float. time step size which gets passed to IVP solver
+            Float. Time step size which gets passed to IVP solver
         downsample:
-            Integer. fraction of outputs to keep (1/n). By default, keeps all samples. downsample=4 means every 4th
+            Integer. Fraction of outputs to keep (1/n). By default, keeps all samples. downsample=4 means every 4th
             sample is kept, etc. Downsample is deprecated. Simply modify "dt" instead.
 
         Returns:
@@ -742,6 +747,10 @@ class OmicsGenerator:
                 raise ValueError(f"Node '{node.name}' has no x0 vector")
             if node.growth_rates is None:
                 raise ValueError(f"Node '{node.name}' has no growth rate set")
+
+        # Define noise distribution
+        if noise_distribution is None:
+            noise_distribution = partial(np.random.normal, scale=noise_var)
 
         def _grad_fn(
             node : None,
@@ -820,7 +829,8 @@ class OmicsGenerator:
                         Zt += intervention.vector * intervention.U[t]
 
                 # Add biological noise:
-                noise = np.random.normal(scale=noise_var, size=node.size)
+                # noise = np.random.normal(scale=noise_var, size=node.size)
+                noise = noise_distribution(size=node.size)
 
                 # No noise for missing taxa
                 noise = noise * (Zt > 0)
@@ -863,6 +873,8 @@ class OmicsGenerator:
             # Draw samples
             y = []
             for idx in range(x.shape[0]):
+                # Yt = np.random.multinomial(n_reads, x[idx]) / n_reads
+                # y += [Yt]
                 try:
                     Yt = np.random.multinomial(n_reads, x[idx]) / n_reads
                     y += [Yt]
@@ -940,6 +952,7 @@ class OmicsGenerator:
             # Set new initial values for each node
             for node in self.nodes:
                 # TODO: allow passing of any function to generate this
+                # FUNCTIONALIZE
                 abundances = np.random.exponential(size=node.size) * np.random.binomial(1, 1-extinct_fraction, size=node.size)
                 self.set_initial_value(node.name, abundances, verbose=False)
 
@@ -1000,26 +1013,26 @@ class OmicsGenerator:
         None (fails silently).
         """
 
-        # sample coefficients
+        # Sample coefficients
         mu = np.zeros(2)
         cov = sigma ** 2 * np.array([[1, rho], [rho, 1]])
         n_samples = int(n * (n-1) / 2)
         pairs = np.random.multivariate_normal(mu, cov, n_samples)
 
-        # completely filled matrix
+        # Build up a completely filled matrix
         M = np.ndarray((n, n))
         M[np.triu_indices(n, 1)] = pairs[:,0]
         M = M.transpose()
         M[np.triu_indices(n, 1)] = pairs[:,1]
 
-        # winnow down
+        # Winnow down matrix according to C
         connections = np.random.rand(n, n) <= C
         connections = connections * 1 # binarize
         connections[np.tril_indices(n,1)] = 0
         connections += connections.transpose() # symmetric
         M *= connections
 
-        # set negative self-interactions
+        # Set negative self-interactions
         M[np.diag_indices(n)] = -d
 
         return M
@@ -1038,7 +1051,7 @@ class OmicsGenerator:
         C:
             Float in (0,1]: Sparsity parameter. Higher C = less sparse.
         d:
-            Float. Negative self-interaction size.
+            Float. Negative self-interaction size. If set to None/default, it will be computed automatically as sigma - sqrt(n * C) + 1.
         sigma:
             Float. Variance used to generate multivariate normal covariance matrix.
         rho:
@@ -1105,6 +1118,7 @@ class OmicsGenerator:
         """
 
         # TODO: make use of dist argument
+        # FUNCTIONALIZE
 
         self._set_interactions(**kwargs)
         for node in self.nodes:
@@ -1175,7 +1189,7 @@ class OmicsGenerator:
         case_gen.add_intervention(
             name='CASE',
             node_name=node_name,
-            vector=effect_size * (0.5-np.random.rand(node_size)),
+            vector=effect_size * (0.5-np.random.rand(node_size)), # FUNCTIONALIZE
             start=0,
             end=self._time_points
         )

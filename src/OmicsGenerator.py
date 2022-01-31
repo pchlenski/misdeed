@@ -1111,7 +1111,7 @@ class OmicsGenerator:
     def _init_full(
         self,
         initial_distribution : callable = np.random.exponential,
-        growth_rate_distribution : callable = self._random,
+        growth_rate_distribution : callable = _random,
         **kwargs) -> None:
         """
         A fully random initialization of all generator parameters.

@@ -962,9 +962,6 @@ class OmicsGenerator:
         for i in range(n):
             # Set new initial values for each node
             for node in self.nodes:
-                # TODO: allow passing of any function to generate this
-                # FUNCTIONALIZE
-                # abundances = np.random.exponential(size=node.size) * np.random.binomial(1, 1-extinct_fraction, size=node.size)
                 abundances = initial_distribution(size=node.size)
                 self.set_initial_value(node.name, abundances, verbose=False)
 
@@ -1110,15 +1107,19 @@ class OmicsGenerator:
 
     def _init_full(
         self,
-        dist : None = np.random.exponential,
+        initial_distribution : callable = np.random.exponential,
+        growth_rate_distribution : callable = 2 * (0.5 - np.random.rand)),
         **kwargs) -> None:
         """
         A fully random initialization of all generator parameters.
 
         Args:
         -----
-        dist:
-            A function to draw initial distributions (e.g. np.random.exponential, np.random.rand, etc)
+        initial_distribution:
+            Callable. A function to draw initial distributions (e.g. np.random.exponential, np.random.rand, etc). Must 
+            have a 'size' parameter.
+        growth_rate_distribution:
+            A function to draw growth rates from a distribution. Must have a 'size' parameter.
 
         Returns:
         --------
@@ -1136,11 +1137,12 @@ class OmicsGenerator:
         for node in self.nodes:
             self.set_initial_value(
                 node.name,
-                np.random.exponential(size=node.size)
+                initial_distribution(size=node.size)
             )
             self.set_initial_value(
                 node.name,
-                2 * (0.5 - np.random.rand(node.size)),
+                # 2 * (0.5 - np.random.rand(node.size)),
+                growth_rate_distribution(size=node.size),
                 growth_rate=True
             )
 

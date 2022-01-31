@@ -894,6 +894,7 @@ class OmicsGenerator:
     def generate_multiple(
         self,
         n : int,
+        initial_distribution : callable = None,
         extinct_fraction : float = 0,
         **generate_args) -> (list, list, list):
         """
@@ -906,8 +907,13 @@ class OmicsGenerator:
         -----
         n:
             Integer. Number of individuals for whom to generate synthetic data timecourses.
+        initial_distribution:
+            [EXPERIMENTAL] Callable. A function to sample abundances for sample at t=0 from some distribution. By
+            default (if unspecified), samples from the product of an exponential distribution with a multinomial
+            Bernoulli variable parameterized by p = (1-extinct_fraction). 
         extinct_fraction:
-            Float in [0, 1) range. Fraction of abundances that should be extinct for each individual.
+            Float in [0, 1) range. Fraction of abundances that should be extinct for each individual. If
+            initial_distribution is set, does nothing.
 
         Additional args (same as generate()):
         -------------------------------------
@@ -947,13 +953,19 @@ class OmicsGenerator:
         out_Y = []
         out_Z = []
 
+        # Initialize first sample distribution
+        if initial_distribution is None:
+            def initial_distribution(size):
+                return np.random.exponential(size=size) * np.random.binomial(1, 1-extinct_fraction, size=size)
+
         # Generation loop
         for i in range(n):
             # Set new initial values for each node
             for node in self.nodes:
                 # TODO: allow passing of any function to generate this
                 # FUNCTIONALIZE
-                abundances = np.random.exponential(size=node.size) * np.random.binomial(1, 1-extinct_fraction, size=node.size)
+                # abundances = np.random.exponential(size=node.size) * np.random.binomial(1, 1-extinct_fraction, size=node.size)
+                abundances = initial_distribution(size=node.size)
                 self.set_initial_value(node.name, abundances, verbose=False)
 
             Z,X,Y = self.generate(**generate_args)

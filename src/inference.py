@@ -56,7 +56,7 @@ def infer_glv_params(
 
     # Need dummy interventions
     if interventions is None:
-        interventions = np.zeros(n_times)
+        interventions = np.zeros(n_times, 1)
         no_interventions = True
 
     # Reshape vector-valued interventions

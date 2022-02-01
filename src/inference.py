@@ -55,7 +55,7 @@ def infer_glv_params(
     n_times, n_clades = abundances.shape
 
     # Need dummy interventions
-    if not interventions:
+    if interventions is None:
         interventions = np.zeros(n_times)
         no_interventions = True
 

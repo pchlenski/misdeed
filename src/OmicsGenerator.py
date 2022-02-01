@@ -27,7 +27,7 @@ class OmicsGenerator:
     time_points:
         Integer. How many total time points to generate. Not to be confused with downsampling coefficient (applied
         later).
-    nodes:
+    node_names:
         List of strings. (Unique) node names for each node.
     node_sizes:
         List of ints. Node sizes for each node.
@@ -53,7 +53,7 @@ class OmicsGenerator:
     def __init__(
         self,
         node_sizes : list = None,
-        nodes : list = None,
+        node_names : list = None,
         time_points : int = 100,
         discard_first : int = 0,
         init_full : bool = False,
@@ -68,16 +68,16 @@ class OmicsGenerator:
             raise Exception("Must specify at least one node size.")
 
         # Better handling for single-node systems
-        if isinstance(nodes, str):
+        if isinstance(node_names, str):
             nodes = [nodes]
         if isinstance(node_sizes, int):
             node_sizes = [node_sizes]
 
         # Give default node names
-        if node_sizes is not None and nodes is None:
-            nodes = [f"n{i}" for i in range(len(node_sizes))]
-        elif len(nodes) != len(node_sizes):
-            raise Exception(f"Node lengths and node sizes do not match: {len(nodes)} != {len(node_sizes)}")
+        if node_sizes is not None and node_names is None:
+            nod_nameses = [f"n{i}" for i in range(len(node_sizes))]
+        elif len(node_names) != len(node_sizes):
+            raise Exception(f"Node lengths and node sizes do not match: {len(node_names)} != {len(node_sizes)}")
 
         self._interactions = []
         self._interventions = []
@@ -89,8 +89,8 @@ class OmicsGenerator:
 
         # Process nodes
         self.nodes = []
-        for node_name, size in zip(nodes, node_sizes):
-            self.add_node(node_name, size)
+        for node_name, node_size in zip(node_names, node_sizes):
+            self.add_node(node_name, node_size)
 
         if init_full:
             self._init_full(**kwargs)

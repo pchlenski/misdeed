@@ -56,7 +56,7 @@ def infer_glv_params(
 
     # Need dummy interventions
     if interventions is None:
-        interventions = np.zeros((n_times, 1))
+        interventions = np.zeros((1, n_times))
         no_interventions = True
 
     # Reshape vector-valued interventions
@@ -67,6 +67,7 @@ def infer_glv_params(
     Y1 = abundances.T # read in ABSOLUTE abundances (Z matrix)
     Y2 = np.ones((1, n_times)) # 1s for each time point
     Y3 = interventions
+    print(Y1.shape, Y2.shape, Y3.shape) # DEBUG
     Y = np.concatenate((Y1, Y2, Y3), axis=0)
     Y = Y[:,:-1] # drop last time point
 

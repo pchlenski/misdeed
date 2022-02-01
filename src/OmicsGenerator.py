@@ -1106,7 +1106,7 @@ class OmicsGenerator:
             i += node1.size
 
     def _random(size) -> np.ndarray:
-        return 2 * (0.5 - np.random.rand(size=size))
+        return 2 * (0.5 - np.random.rand(size))
 
     def _init_full(
         self,

@@ -75,7 +75,7 @@ class OmicsGenerator:
 
         # Give default node names
         if node_sizes is not None and node_names is None:
-            nod_nameses = [f"n{i}" for i in range(len(node_sizes))]
+            nod_names = [f"n{i}" for i in range(len(node_sizes))]
         elif len(node_names) != len(node_sizes):
             raise Exception(f"Node lengths and node sizes do not match: {len(node_names)} != {len(node_sizes)}")
 

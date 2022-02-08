@@ -89,7 +89,7 @@ def infer_glv_params(
     lambdas = np.diag(lambdas)
 
     # Infer M, u, E
-    MuE = F @ Y.T @ np.linalg.inv(Y @ Y.T + lambdas)
+    MuE = F @ Y.T @ np.linalg.pinv(Y @ Y.T + lambdas)
     inferred_M = MuE[:,:n_clades]
     inferred_u = MuE[:,n_clades]
     if no_interventions:

@@ -4,13 +4,13 @@ Helper functions: infer gLV parameters.
 import numpy as np
 
 def infer_glv_params(
-    abundances : np.ndarray,
-    interventions : np.ndarray = None,
+    abundances : np.array,
+    interventions : np.array = None,
     interaction_reg : float = 0,
     growth_reg : float = 0,
     intervention_reg : float = 0,
     dt : float = 1e-3,
-    pseudocount : float = 1e-5) -> (np.ndarray, np.ndarray, np.ndarray):
+    pseudocount : float = 1e-5) -> (np.array, np.array, np.array):
     """
     Infers interaction matrix, growth rates, and intervention responses from absolute abundance data.
 
@@ -74,7 +74,7 @@ def infer_glv_params(
     print("dt shape", dt.shape)
 
     # Build up F matrix
-    if not isinstance(dt, np.ndarray):
+    if not isinstance(dt, np.array):
         dt = dt * np.ones((n_times - 1, 1)) # change in times
     logs = np.log(abundances + pseudocount)
     dx = np.diff(logs, axis=0) # changes in log-abundances

@@ -74,7 +74,7 @@ def infer_glv_params(
     print("dt shape", dt.shape)
 
     # Build up F matrix
-    if not isinstance(dt, np.array):
+    if not isinstance(dt, np.ndarray):
         dt = dt * np.ones((n_times - 1, 1)) # change in times
     logs = np.log(abundances + pseudocount)
     dx = np.diff(logs, axis=0) # changes in log-abundances

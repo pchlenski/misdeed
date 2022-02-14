@@ -69,6 +69,9 @@ def infer_glv_params(
     Y3 = interventions
     Y = np.concatenate((Y1, Y2, Y3), axis=0)
     Y = Y[:,:-1] # drop last time point
+    print("Y shape", Y.shape)
+    print("abundances shape", abundances.shape)
+    print("dt shape", dt.shape)
 
     # Build up F matrix
     if not isinstance(dt, np.ndarray):

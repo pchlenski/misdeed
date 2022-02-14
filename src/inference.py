@@ -71,7 +71,8 @@ def infer_glv_params(
     Y = Y[:,:-1] # drop last time point
     print("Y shape", Y.shape)
     print("abundances shape", abundances.shape)
-    print("dt shape", dt.shape)
+    if isinstance(dt, np.ndarray):
+        print("dt shape", dt.shape)
 
     # Build up F matrix
     if not isinstance(dt, np.ndarray):

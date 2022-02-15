@@ -370,7 +370,7 @@ class OmicsGenerator:
 
     def add_interaction(
         self,
-        name : str,
+        name : str = None,
         outbound_node_name : str,
         inbound_node_name : str,
         matrix : np.ndarray,
@@ -409,7 +409,12 @@ class OmicsGenerator:
         """
 
         # Check namespace
-        if name in self._namespace:
+        if name is None:
+            name_idx = 0
+            while f"i{name_idx}" in self._namespace:
+                name_idx += 1
+            name = f"{name_idx}"
+        elif name in self._namespace:
             raise Exception(f"Name {name} already in use. Please use a unique name")
 
         # Check verbosity
@@ -744,7 +749,7 @@ class OmicsGenerator:
         # Sanity checks
         for node in self.nodes:
             if node.initial_value is None:
-                raise ValueError(f"Node '{node.name}' has no x0 vector")
+                raise ValueError(f"Node '{node.name}' has no z0 vector")
             if node.growth_rates is None:
                 raise ValueError(f"Node '{node.name}' has no growth rate set")
 
@@ -1133,9 +1138,6 @@ class OmicsGenerator:
         None
         """
 
-        # TODO: make use of dist argument
-        # FUNCTIONALIZE
-
         self._set_interactions(**kwargs)
         for node in self.nodes:
             self.set_initial_value(
@@ -1154,7 +1156,8 @@ class OmicsGenerator:
         participants : int,
         case_frac : float,
         node_name: str,
-        effect_size : float,
+        effect_size : float = 1,
+        response_distribution: callable = None,
         **generate_args) -> (list, list, list, list, list, list):
         """
         Generates synthetic case and control timecourses.
@@ -1169,6 +1172,8 @@ class OmicsGenerator:
             String. Name of node to which the intervention is applied.
         effect_size:
             Float. Magnitude of intervention.
+        response_distribution:
+            Numpy vector of effect responses, or function to generate random distribution.
         **kwargs:
             Arguments that get passed to generate_multiple().
 
@@ -1192,21 +1197,28 @@ class OmicsGenerator:
         TODO
         """
 
-        # inferred settings
+        # Inferred settings
         n_cases = int(participants * case_frac)
         n_controls = int(participants * (1-case_frac))
 
-        # get control values
+        # Get control values
         x_control, y_control, z_control = self.generate_multiple(n_controls, **generate_args)
 
-        # get case values
+        # Get case values
         case_gen = self.copy()
         node_size = self.get(node_name).size
 
+        # Get response vector
+        if istype(callable, response_distribution):
+            vector = response_distribution()
+        elif response_distribution is None and :
+            vector = effect_size * (0.5 - np.random.rand(node_size))
+
+        # Generate intervention
         case_gen.add_intervention(
             name='CASE',
             node_name=node_name,
-            vector=effect_size * (0.5-np.random.rand(node_size)), # FUNCTIONALIZE
+            vector=vector,
             start=0,
             end=self._time_points
         )

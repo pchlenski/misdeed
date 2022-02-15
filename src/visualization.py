@@ -57,6 +57,7 @@ def plot_pca(
     cmap='magma',
     plot_endpoints=True,
     plot_trajectories=True,
+    flip=True,
     **kwargs) -> None:
     """
     Makes PCA plots from (a list of) generator outputs.
@@ -75,6 +76,9 @@ def plot_pca(
             Boolean. If True, marks endpoints of trajectories with an X.
         plot_trajectories:
             Boolean. If True, plots entire timecourse as a PCA trajectory.
+        flip:
+            Boolean. If True, flips PC1 horizontally. This is useful because PCA tends to plot trajectories in the 
+            counterintuitive right-to-left direction.
         **kwargs:
             Passed to plt.plot() and plt.scatter().
 
@@ -133,11 +137,11 @@ def plot_pca(
 
             # plot PCA trajectories we need
             if plot_trajectories:
-                plt.plot(individual_pca[:,0], individual_pca[:,1], color=c, **kwargs)
+                plt.plot(-individual_pca[:,0], individual_pca[:,1], color=c, **kwargs)
 
             # draw Xes
             if plot_endpoints:
-                plt.scatter(individual_pca[-1,0], individual_pca[-1,1], color=c, marker='x', **kwargs)
+                plt.scatter(-individual_pca[-1,0], individual_pca[-1,1], color=c, marker='x', **kwargs)
 
             individual_counter += 1
 

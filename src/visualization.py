@@ -116,24 +116,21 @@ def plot_pca(
         colors = colormap
 
     # Start plotting inputs
-    trajectory_counter = 0
-
-    for trajectory in trajectories:
+    for trajectory_idx, trajectory in enumerate(trajectories):
         node_input = [sample[node_name] for sample in trajectory]
-        individual_counter = 0
 
-        for individual in node_input:
+        for individual_idx, individual in enumerate(node_input):
             individual = np.array(individual).reshape(-1, node_size)
             individual = np.nan_to_num(individual)
             individual_pca = pca.transform(individual)
 
             # color case 1: all inputs belong to the same cluster
             if len(trajectories) == 1:
-                c = colormap[individual_counter]
+                c = colormap[individual_idx]
 
             # color case 2: different clusters
             else:
-                c = colors[trajectory_counter]
+                c = colors[trajectory_idx]
 
             # plot PCA trajectories we need
             if plot_trajectories:
@@ -142,7 +139,3 @@ def plot_pca(
             # draw Xes
             if plot_endpoints:
                 plt.scatter(-individual_pca[-1,0], individual_pca[-1,1], color=c, marker='x', **kwargs)
-
-            individual_counter += 1
-
-        trajectory_counter += 1

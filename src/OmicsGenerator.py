@@ -1211,7 +1211,7 @@ class OmicsGenerator:
         # Get response vector
         if istype(callable, response_distribution):
             vector = response_distribution()
-        elif response_distribution is None and :
+        elif response_distribution is None:
             vector = effect_size * (0.5 - np.random.rand(node_size))
 
         # Generate intervention

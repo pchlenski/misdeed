@@ -370,10 +370,10 @@ class OmicsGenerator:
 
     def add_interaction(
         self,
-        name : str = None,
         outbound_node_name : str,
         inbound_node_name : str,
         matrix : np.ndarray,
+        name : str = None,
         lag : int = 0,
         verbose : bool = True) -> None:
         """

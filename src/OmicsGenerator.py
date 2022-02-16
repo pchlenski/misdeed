@@ -1208,7 +1208,7 @@ class OmicsGenerator:
         node_size = self.get(name=node_name).size
 
         # Get response vector
-        if isinstance(response_distribution, callable):
+        if callable(response_distribution):
             vector = response_distribution()
         elif response_distribution is None:
             vector = effect_size * (0.5 - np.random.rand(node_size))

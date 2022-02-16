@@ -90,7 +90,7 @@ class OmicsGenerator:
         # Process nodes
         self.nodes = []
         for node_name, node_size in zip(node_names, node_sizes):
-            self.add_node(node_name, node_size)
+            self.add_node(name=node_name, size=node_size)
 
         if init_full:
             self._init_full(**kwargs)
@@ -437,12 +437,12 @@ class OmicsGenerator:
             raise ValueError(f"Matrix shape[0] = {matrix.shape[0]} != {outbound_node.size} (size of outbound node '{outbound_node.name}')")
 
         interaction = self._OmicsInteraction(
-            name,
-            outbound_node,
-            inbound_node,
-            matrix,
-            lag,
-            verbose
+            name=name,
+            outbound_node=outbound_node,
+            inbound_node=inbound_node,
+            matrix=matrix,
+            lag=lag,
+            verbose=verbose
         )
         self._interactions.append(interaction)
 
@@ -527,12 +527,12 @@ class OmicsGenerator:
 
         # Make the intervention and add it to self
         intervention = self._OmicsIntervention(
-            name,
-            vector,
-            node_name,
-            U,
-            affects_abundance,
-            verbose
+            name=name,
+            vector=vector,
+            node_name=node_name,
+            U=U,
+            affects_abundance=affects_abundance,
+            verbose=verbose
         )
         if len(intervention.U) == self._time_points:
             self._interventions.append(intervention)
@@ -573,7 +573,7 @@ class OmicsGenerator:
         TODO
         """
 
-        node = self.get(node_name, "node")
+        node = self.get(name=node_name, object_type="node")
 
         # Check node exists
         if node is None:
@@ -599,7 +599,7 @@ class OmicsGenerator:
     def get(
         self,
         name : str,
-        node_type : str in ["node", "interaction", "intervention"] = None) -> "generator element":
+        object_type : str in ["node", "interaction", "intervention"] = None) -> "generator element":
         """
         Gets a (node/interaction/intervention) by name.
 
@@ -607,7 +607,7 @@ class OmicsGenerator:
         -----
         name:
             String. Name of node/interaction/intervention.
-        type:
+        object_type:
             String. One of ["node", "interaction", "intervention"]. Specifies the type of generator element to look for.
 
         Returns:
@@ -619,17 +619,17 @@ class OmicsGenerator:
         None
         """
 
-        if node_type in (None, "node"):
+        if object_type in (None, "node"):
             for node in self.nodes:
                 if node.name == name:
                     return node
 
-        if node_type in (None, "interaction"):
+        if object_type in (None, "interaction"):
             for interaction in self._interactions:
                 if interaction.name == name:
                     return interaction
 
-        if node_type in (None, "intervention"):
+        if object_type in (None, "intervention"):
             for intervention in self._interventions:
                 if intervention.name == name:
                     return intervention
@@ -657,7 +657,7 @@ class OmicsGenerator:
         TODO
         """
 
-        obj = self.get(name)
+        obj = self.get(name=name)
 
         if obj is None:
             raise Exception(f"Cannot find object named {name} to remove")
@@ -1089,7 +1089,7 @@ class OmicsGenerator:
         if d is None:
             d = sigma * np.sqrt(n * C) + 1
 
-        m0 = self._allesina_tang_normal_matrix(n, C, d, sigma, rho)
+        m0 = self._allesina_tang_normal_matrix(n=n, C=C, d=d, sigma=sigma, rho=rho)
 
         # Carve up master matrix
         i = 0 # row
@@ -1098,10 +1098,10 @@ class OmicsGenerator:
             for node2 in self.nodes:
                 m_ij = m0[i:i + node1.size, j:j + node2.size]
                 self.add_interaction(
-                    f"{node1.name}->{node2.name}",
-                    node1.name,
-                    node2.name,
-                    m_ij
+                    name=f"{node1.name}->{node2.name}",
+                    outbound_node_node=node1.name,
+                    inbound_node_name=node2.name,
+                    matrix=m_ij
                 )
 
                 if not self._silent:
@@ -1141,13 +1141,12 @@ class OmicsGenerator:
         self._set_interactions(**kwargs)
         for node in self.nodes:
             self.set_initial_value(
-                node.name,
-                initial_distribution(size=node.size)
+                node_name=node.name,
+                values=initial_distribution(size=node.size)
             )
             self.set_initial_value(
-                node.name,
-                # 2 * (0.5 - np.random.rand(node.size)),
-                growth_rate_distribution(size=node.size),
+                node_name=node.name,
+                values=growth_rate_distribution(size=node.size),
                 growth_rate=True
             )
 
@@ -1202,11 +1201,11 @@ class OmicsGenerator:
         n_controls = int(participants * (1-case_frac))
 
         # Get control values
-        x_control, y_control, z_control = self.generate_multiple(n_controls, **generate_args)
+        x_control, y_control, z_control = self.generate_multiple(n=n_controls, **generate_args)
 
         # Get case values
         case_gen = self.copy()
-        node_size = self.get(node_name).size
+        node_size = self.get(name=node_name).size
 
         # Get response vector
         if istype(callable, response_distribution):
@@ -1222,7 +1221,7 @@ class OmicsGenerator:
             start=0,
             end=self._time_points
         )
-        z_case, x_case, y_case = case_gen.generate_multiple(n_cases, **generate_args)
+        z_case, x_case, y_case = case_gen.generate_multiple(n=n_cases, **generate_args)
 
         return z_control, x_control, y_control, z_case, x_case, y_case
 
@@ -1325,11 +1324,11 @@ class OmicsGenerator:
                     raise Exception(f"Wrong datatype: submitted list of {type(individual)}, expected list of dicts.")
 
                 mkdir(f"{output_path}/{idx}")
-                self._save_single(individual, f"{output_path}/{idx}/{prefix}{idx}", delim, ext)
+                self._save_single(data=individual, path=f"{output_path}/{idx}/{prefix}{idx}", delim=delim, ext=ext)
 
         # Single output
         elif isinstance(data, dict):
-            self._save_single(data, f"{output_path}/{prefix}", delim, ext)
+            self._save_single(data=data, path=f"{output_path}/{prefix}", delim=delim, ext=ext)
 
     def __str__(self):
         # TODO: Rewrite this more cleanly with f-strings

@@ -1099,7 +1099,7 @@ class OmicsGenerator:
                 m_ij = m0[i:i + node1.size, j:j + node2.size]
                 self.add_interaction(
                     name=f"{node1.name}->{node2.name}",
-                    outbound_node_node=node1.name,
+                    outbound_node_name=node1.name,
                     inbound_node_name=node2.name,
                     matrix=m_ij
                 )

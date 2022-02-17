@@ -961,7 +961,8 @@ class OmicsGenerator:
         # Initialize first sample distribution
         if initial_distribution is None:
             def initial_distribution(size):
-                return np.random.exponential(size=size) * np.random.binomial(1, 1-extinct_fraction, size=size)
+                # return np.random.exponential(size=size) * np.random.binomial(1, 1-extinct_fraction, size=size)
+                return np.random.lognormal(size=size) * np.random.binomial(1, 1-extinct_fraction, size=size)
 
         # Generation loop
         for i in range(n):
@@ -1115,7 +1116,8 @@ class OmicsGenerator:
 
     def _init_full(
         self,
-        initial_distribution : callable = np.random.exponential,
+        # initial_distribution : callable = np.random.exponential,
+        initial_distribution : callable = np.random.lognormal,
         growth_rate_distribution : callable = _random,
         **kwargs) -> None:
         """

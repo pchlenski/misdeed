@@ -1197,11 +1197,11 @@ class OmicsGenerator:
         """
 
         # Inferred settings
-        n_cases = np.round(participants * case_frac)
-        n_controls = np.round(participants * (1-case_frac))
+        n_cases = int(np.round(participants * case_frac))
+        n_controls = int(np.round(participants * (1-case_frac)))
 
         # Get control values
-        x_control, y_control, z_control = self.generate_multiple(n=n_controls, **generate_args)
+        z_control, x_control, y_control = self.generate_multiple(n=n_controls, **generate_args)
 
         # Get case values
         case_gen = self.copy()

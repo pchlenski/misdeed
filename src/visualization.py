@@ -10,6 +10,7 @@ from sklearn.decomposition import PCA
 def plot_timecourse(
     df,
     figsize=(40,10),
+    names=None,
     cols=15) -> None:
     """
     Makes a bar chart of longitudinal data from a generator
@@ -18,6 +19,10 @@ def plot_timecourse(
         df:
             A pandas dataframe (or dtype that can be cast as a dataframe) with relative abundance timecourse data.
             Assumes rows = time points, columns = dimensions (e.g. taxa)
+        figsize:
+            Figsize argument for plot generation.
+        names:
+            Names for labeling legend.
         cols:
             Int. Number of columns in legend.
 
@@ -28,18 +33,22 @@ def plot_timecourse(
         TODO
     """
 
-    # make dataframe automatically
+    # Make dataframe automatically
     if not isinstance(df, pd.DataFrame):
         df = pd.DataFrame(df)
 
-    # get colors
+    # Add names
+    if names is not None:
+        df.columns = names
+
+    # Get colors
     n_colors = df.shape[1]
     viridis = cm.get_cmap('magma', n_colors)
     colors  = viridis(range(n_colors))
     plots = df.plot.bar(stacked=True, figsize=figsize, width=1.0, color=colors)
     plt.legend(loc='lower left', bbox_to_anchor=(0,1,1,0), ncol=cols, mode='expand')
 
-    # tweak params
+    # Tweak params
     plots.patch.set_visible(False)               # make background transparent
     plots.spines['top'].set_visible(False)       # hide top line of plot
     plots.spines['right'].set_visible(False)     # hide right line of plot

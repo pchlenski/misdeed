@@ -203,7 +203,7 @@ class MisdeedOptions:
         # Set automatic GLV parameters
         if args.input_dir is None:
             gen = OmicsGenerator(
-                nodes=node_names,
+                node_names=node_names,
                 node_sizes=node_sizes,
                 time_points=args.time_points,
                 discard_first=args.discard_first,
@@ -217,7 +217,7 @@ class MisdeedOptions:
         # Read GLV parameters from files
         else:
             gen = OmicsGenerator(
-                nodes=node_names,
+                node_names=node_names,
                 node_sizes=node_sizes,
                 time_points=args.time_points,
                 discard_first=args.discard_first
@@ -301,7 +301,7 @@ class MisdeedOptions:
         elif args.case_fraction == 0:
             print(f"Generating {args.n_samples} samples...")
             z,x,y = gen.generate_multiple(
-                args.n_samples,
+                n=args.n_samples,
                 extinct_fraction=args.extinct_fraction,
                 noise_var=args.noise_variance,
                 n_reads=args.n_reads,
@@ -315,7 +315,7 @@ class MisdeedOptions:
                 args.intervention_node = gen.nodes[0].name
 
             z_control, x_control, y_control, z_case, x_case, y_case = gen.case_control(
-                args.n_samples,
+                participants=args.n_samples,
                 case_frac=args.case_fraction,
                 node_name=args.intervention_node,
                 effect_size=args.effect_size,

@@ -47,20 +47,20 @@ class MisdeedOptions:
             "-o", "--output_dir",
             default="./output",
             metavar="",
-            help="Directory in which to store synthetic data"
+            help="Directory in which to store synthetic data. Default: ./output."
         )
         parser.add_argument(
             "-N", "--node_names",
             default=None,
             metavar="",
-            help="Names for each node, separated by commas. If set, must match node_sizes in length."
+            help="Names for each node, separated by commas. If set, must match node_sizes in length. Default: None (n0, n1, n2...)"
         )
         parser.add_argument(
             "-t", "--time_points",
             type=int,
             default=100,
             metavar="",
-            help="Number of time points to generate."
+            help="Number of time points to generate. Default: 100"
         )
 
         # Random matrix params
@@ -69,21 +69,21 @@ class MisdeedOptions:
             type=int,
             default=0,
             metavar="",
-            help="Number of time points to generate and discard at initialization."
+            help="Number of time points to generate and discard at initialization. Default: 0"
         )
         parser.add_argument(
             "-C", "--connectivity",
             type=float,
             default=0.5,
             metavar="",
-            help="Connectivity (1-sparsity) for generating interaction matrix. Not used if --input_dir is set."
+            help="Connectivity (1-sparsity) for generating interaction matrix. Not used if --input_dir is set. Default: 0.5"
         )
         parser.add_argument(
             "-P", "--self_penalty",
             type=float,
             default=None,
             metavar="",
-            help="Self-penalty for generating interaction matrix. Not used if --input_dir is set."
+            help="Self-penalty for generating interaction matrix. Not used if --input_dir is set. Default: None (inferred from C, d, sigma)"
         )
         parser.add_argument(
             "-V", "--variance",
@@ -91,7 +91,7 @@ class MisdeedOptions:
             default=1,
             metavar="",
             help="""Variance for multivariate normal distribution for generating interaction matrix. Not used if
-            --input_dir is set."""
+            --input_dir is set. Default: 1"""
         )
         parser.add_argument(
             "-R", "--correlation",
@@ -99,7 +99,7 @@ class MisdeedOptions:
             default=-0.4,
             metavar="",
             help="""Correlation (rho) for multivariate normal distribution for generating interaction matrix. Not used
-            if --input_dir is set."""
+            if --input_dir is set. Default: -0.4"""
         )
 
         # Simulation params
@@ -108,42 +108,42 @@ class MisdeedOptions:
             type=int,
             default=1,
             metavar="",
-            help="Number of samples to generate."
+            help="Number of samples to generate. Default: 1"
         )
         parser.add_argument(
             "-e", "--extinct_fraction",
             type=float,
             default=0,
             metavar="",
-            help="Fraction of clades to set to zero when generating samples."
+            help="Fraction of clades to set to zero when generating samples. Default: 0"
         )
         parser.add_argument(
             "-v", "--noise_variance",
             type=float,
             default=1e-2,
             metavar="",
-            help="Variance of biological noise added to system."
+            help="Variance of biological noise added to system. Default: .01"
         )
         parser.add_argument(
             "-r", "--n_reads",
             type=int,
             default=1e5,
             metavar="",
-            help="Number of reads drawn per sample."
+            help="Number of reads drawn per sample. Default: 10,000"
         )
         parser.add_argument(
             "-T", "--time_step",
             type=float,
             default=1e-2,
             metavar="",
-            help="Size of time increment between samples."
+            help="Size of time increment between samples. Default: .01"
         )
         parser.add_argument(
             "-d", "--downsample",
             type=int,
             default=1,
             metavar="",
-            help="Downsampling coefficient (keep every d-th sample)."
+            help="Downsampling coefficient (keep every d-th sample). Default: 1 (no downsampling)"
         )
 
         # Case-control params
@@ -152,33 +152,33 @@ class MisdeedOptions:
             type=float,
             default=0,
             metavar="",
-            help="Fraction of samples to generate as cases (default = 0)"
+            help="Fraction of samples to generate as cases. Default: 0 (no cases)"
         )
         parser.add_argument(
             "-I", "--intervention_node",
             type=str,
             default=None,
             metavar="",
-            help="Node to which case intervention is applied (default = first node)"
+            help="Node to which case intervention is applied. Default: first node"
         )
         parser.add_argument(
             "-E", "--effect_size",
             type=float,
             default=0.1,
             metavar="",
-            help="Effect size of case intervention."
+            help="Effect size of case intervention. Default: 0.1"
         )
 
         # Plotting params
         parser.add_argument(
             "-p", "--plot",
             action="store_true",
-            help="Save plots of timecourses in output directory."
+            help="Save plots of timecourses in output directory. Default: False"
         )
         parser.add_argument(
             "-a", "--pca",
             action="store_true",
-            help="Save PCA plot of all timecourses in output directory"
+            help="Save PCA plot of all timecourses in output directory. Default: False"
         )
 
         # Check positional arguments are in place

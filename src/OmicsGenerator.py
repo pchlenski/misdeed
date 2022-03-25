@@ -1088,7 +1088,7 @@ class OmicsGenerator:
 
         # Solve for a stable value of d if d is not provided
         if d is None:
-            d = sigma * np.sqrt(n * C) + 1
+            d = sigma * np.sqrt(n * C) * (1 + rho) + 1
 
         m0 = self._allesina_tang_normal_matrix(n=n, C=C, d=d, sigma=sigma, rho=rho)
 

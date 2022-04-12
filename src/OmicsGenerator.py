@@ -6,7 +6,7 @@ from copy import deepcopy
 from uuid import uuid4
 from os import mkdir
 from functools import partial
-import tqdm
+from tqdm import tqdm
 
 import numpy as np
 from scipy.integrate import solve_ivp

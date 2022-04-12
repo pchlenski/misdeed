@@ -6,6 +6,7 @@ from copy import deepcopy
 from uuid import uuid4
 from os import mkdir
 from functools import partial
+import tqdm
 
 import numpy as np
 from scipy.integrate import solve_ivp
@@ -965,7 +966,7 @@ class OmicsGenerator:
                 return np.random.lognormal(size=size) * np.random.binomial(1, 1-extinct_fraction, size=size)
 
         # Generation loop
-        for i in range(n):
+        for i in tqdm(range(n)):
             # Set new initial values for each node
             for node in self.nodes:
                 abundances = initial_distribution(size=node.size)

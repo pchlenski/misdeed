@@ -1112,14 +1112,13 @@ class OmicsGenerator:
                 j += node2.size
             i += node1.size
 
-    def _random(size) -> np.ndarray:
+    def _random(self, size) -> np.ndarray:
         return 2 * (0.5 - np.random.rand(size))
 
     def _init_full(
         self,
-        # initial_distribution : callable = np.random.exponential,
         initial_distribution : callable = np.random.lognormal,
-        growth_rate_distribution : callable = _random,
+        growth_rate_distribution : callable = self._random,
         **kwargs) -> None:
         """
         A fully random initialization of all generator parameters.

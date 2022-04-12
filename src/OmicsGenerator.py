@@ -1212,7 +1212,7 @@ class OmicsGenerator:
 
         # Get response vector
         if response_distribution is None:
-            vector = effect_size / 2 * _random(node_size)
+            vector = effect_size / 2 * self._random(node_size)
         else:
             vector = response_distribution(size=node_size)
 

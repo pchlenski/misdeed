@@ -1211,10 +1211,10 @@ class OmicsGenerator:
         node_size = self.get(name=node_name).size
 
         # Get response vector
-        if callable(response_distribution):
+        if response_distribution is None:
+            vector = effect_size / 2 * _random(node_size)
+        else:
             vector = response_distribution(size=node_size)
-        elif response_distribution is None:
-            vector = effect_size * (0.5 - np.random.rand(node_size))
 
         # Generate intervention
         case_gen.add_intervention(

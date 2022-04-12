@@ -1112,11 +1112,12 @@ class OmicsGenerator:
                 j += node2.size
             i += node1.size
 
-    def _random(self, size) -> np.ndarray:
+    def _random(size) -> np.ndarray:
         return 2 * (0.5 - np.random.rand(size))
 
     def _init_full(
         self,
+        # initial_distribution : callable = np.random.exponential,
         initial_distribution : callable = np.random.lognormal,
         growth_rate_distribution : callable = _random,
         **kwargs) -> None:
@@ -1158,7 +1159,8 @@ class OmicsGenerator:
         case_frac : float,
         node_name: str,
         effect_size : float = 1,
-        response_distribution: callable = None,
+        # response_distribution: callable = None,
+        response_distribution: callable = _random,
         **generate_args) -> (list, list, list, list, list, list):
         """
         Generates synthetic case and control timecourses.
@@ -1210,10 +1212,10 @@ class OmicsGenerator:
         node_size = self.get(name=node_name).size
 
         # Get response vector
-        if response_distribution is None:
-            vector = effect_size / 2 * self._random(node_size)
-        else:
-            vector = response_distribution(size=node_size)
+        # if response_distribution is None:
+        #     vector = effect_size / 2 * self._random(node_size)
+        # else:
+        vector = effect_size * response_distribution(size=node_size)
 
         # Generate intervention
         case_gen.add_intervention(

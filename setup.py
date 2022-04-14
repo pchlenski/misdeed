@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
    name='MiSDEED',
-   version='1.0.0',
+   version='1.0.2',
    description='Microbiome Synthetic Data Engine for Experimental Design ',
    author='Philippe Chlenski',
    author_email='pac@cs.columbia.edu',

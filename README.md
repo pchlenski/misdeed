@@ -3,6 +3,9 @@ Microbiome Synthetic Data Engine for Experimental Design
 ![Diagram](./img/diagram.png)
 <!-- example synthetic data goes here -->
 
+# Anonymous feedback form
+User feedback is important to us. While you are welcome to create an issue in Github, please be aware that we are also monitoring anonymous feedback via [this form](https://forms.gle/BpymPre851csE9JL7).
+
 # Misdeed command-line interface
 
 ## Usage

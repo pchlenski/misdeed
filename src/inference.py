@@ -2,6 +2,7 @@
 Helper functions: infer gLV parameters.
 """
 import numpy as np
+import pandas as pd
 
 def infer_glv_params(
     abundances : np.ndarray,

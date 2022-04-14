@@ -1,10 +1,26 @@
 # MiSDEED
-Microbiome Synthetic Data Engine for Experimental Design
+## *Mi*crobiome *S*ynthetic *D*ata *E*ngine for *E*xperimental *D*esign
+MiSDEED is a command-line tool and Python package for generating synthetic microbial abundance data. Its uses include power analysis and experimental design, creating simulations from verifiable ground truth for algorithm development, and generating synthetic data for model pretraining and transfer learning. Currently, MiSDEED supports the generation of multiple (possibly case-control) timecourses from an arbitrary number of interacting nodes. MiSDEED is distributed under the MIT license.
+
+This project is run by Philippe Chlenski at Columbia University. A manuscript for MiSDEED is currently in peer review. 
+
 ![Diagram](./img/diagram.png)
 <!-- example synthetic data goes here -->
 
 # Anonymous feedback form
 User feedback is important to us. While you are welcome to create an issue in Github, please be aware that we are also monitoring anonymous feedback via [this form](https://forms.gle/BpymPre851csE9JL7).
+
+# Installation
+MiSDEED can easily be installed using `pip` as follows:
+```bash
+pip install misdeed
+```
+
+## Dependencies
+Dependencies are listed in `requirements.txt` and can be installed using
+```bash
+pip install -r requirements.txt
+```
 
 # Misdeed command-line interface
 
@@ -16,12 +32,6 @@ MiSDEED is used as follows:
 Here the `node_sizes` positional parameter is a comma-separated list of integers. To see MiSDEED parameters, run the following command:
 ```bash
 ./misdeed -h
-```
-
-## Dependencies
-Dependencies are listed in `requirements.txt` and can be installed using
-```bash
-pip install -r requirements.txt
 ```
 
 ## Example

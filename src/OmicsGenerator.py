@@ -82,6 +82,7 @@ class OmicsGenerator:
 
         self._interactions = []
         self._interventions = []
+        self._neighborhoods = []
         self._time_points = time_points + discard_first
         self._T = np.array(range(self._time_points))
         self._namespace = set()
@@ -166,6 +167,7 @@ class OmicsGenerator:
             self.outbound = {}
             self.inbound = {}
             self.interventions = []
+            self.neighborhoods = []
             self.names = names
 
             if verbose:
@@ -300,6 +302,52 @@ class OmicsGenerator:
             if self.affects_abundance:
                 end = "\taffects abundance"
             return f"{self.name}\t{self.node_name}{end}"
+
+    class _OmicsNeighborhood:
+        """
+        PRIVATE METHOD. Call with self.add_neighbor() instead.
+
+        A class for omics spatial relations. This just encodes that two nodes are neighbors of one another.
+
+        Args:
+        -----
+        name:
+            A name for a neighborhood.
+        nodes:
+            A list/iterable of nodes.
+        diffusion:
+            A float between 0 and 1. The amount of mixing per time step. 
+        verbose:
+            Boolean. If False, suppresses print statements.
+
+        Returns:
+        --------
+        _OmicsNeighborhood object.
+
+        Raises:
+        -------
+        None (fails silently, use add_interaction() instead).
+        """
+
+        def __init__(
+            self,
+            name : str,
+            nodes : list,
+            diffusion : float,
+            verbose : bool = True) -> None:
+            """
+            Initializes neighborhood. See docstring for class.
+            """
+
+            self.name = name
+            self.nodes = nodes
+            self.diffusion = diffusion
+
+            if verbose:
+                print(f"Neighborhood '{name}' added")
+
+        def __str__(self):
+            return f"{self.name}:\t({node_names}\tDiffusion: {diffusion})"
 
     def add_node(
         self,
@@ -597,10 +645,55 @@ class OmicsGenerator:
             elif growth_rate:
                 print(f"Added growth rates to node {node_name}")
 
+    def add_neighborhood(
+        self,
+        node_names : list = None,
+        diffusion : float = None,
+        name : str = None,
+        verbose : bool = True) -> None:
+        """
+        TODO
+        """
+
+        # Check namespace
+        if name is None:
+            name_idx = 0
+            while f"i{name_idx}" in self._namespace:
+                name_idx += 1
+            name = f"N{name_idx}"
+        elif name in self._namespace:
+            raise Exception(f"Name {name} already in use. Please use a unique name")
+
+        # Check verbosity
+        if self._silent:
+            verbose = False
+
+        # Get nodes
+        nodes = [self.get(node_name) for node_name in node_names]
+
+        # Automatic diffusion: reasonable parameters
+        if diffusion is None:
+            diffusion = 0.1 / float(len(node_names))
+
+        # Generate neighborhood
+        neighborhood = self._OmicsNeighborhood(
+            name=name,
+            nodes=nodes,
+            diffusion=diffusion,
+            verbose=verbose
+        )
+        self._neighborhoods.append(neighborhood)
+
+        # Append to nodes
+        for node in nodes:
+            node.neighborhoods.append(neighborhood)
+
+        self._namespace.add(name)
+
     def get(
         self,
         name : str,
-        object_type : str in ["node", "interaction", "intervention"] = None) -> "generator element":
+        object_type : str in ["node", "interaction", "intervention", "neighborhood"] = None) -> "generator element":
         """
         Gets a (node/interaction/intervention) by name.
 
@@ -609,11 +702,11 @@ class OmicsGenerator:
         name:
             String. Name of node/interaction/intervention.
         object_type:
-            String. One of ["node", "interaction", "intervention"]. Specifies the type of generator element to look for.
+            String. One of ["node", "interaction", "intervention", "neighborhood"]. Specifies the type of generator element to look for.
 
         Returns:
         --------
-        _OmicsNode, _OmicsInteraction, _OmicsIntervention, or None.
+        _OmicsNode, _OmicsInteraction, _OmicsIntervention, _OmicsNeighborhood, or None.
 
         Raises:
         -------
@@ -634,6 +727,11 @@ class OmicsGenerator:
             for intervention in self._interventions:
                 if intervention.name == name:
                     return intervention
+
+        if object_type in (None, "neighborhood"):
+            for neighborhood in self._neighborhoods:
+                if neighborhood.name == name:
+                    return neighborhood
 
         return None
 
@@ -696,6 +794,13 @@ class OmicsGenerator:
             self._interventions.remove(obj)
             if verbose:
                 print(f"Removed intervention '{name}'")
+
+        elif isinstance(obj, self._OmicsNeighborhood):
+            for node in obj.nodes:
+                node.neighborhoods.remove(obj)
+            self._neighborhoods.remove(obj)
+            if verbose:
+                print(f"Removed neighborhood '{name}'")
 
         else:
             raise Exception(f"Cannot remove '{name}': unknown type. Is the name correct?")
@@ -846,6 +951,25 @@ class OmicsGenerator:
                     Zt *= np.exp(noise)
                 else:
                     Zt += noise
+
+                # Get diffusion
+                print("old shape", Zt.shape)
+                p = 1
+                neighbor_term = np.zeros_like(Zt)
+                print("term (init)", neighbor_term)
+                for neighborhood in node.neighborhoods:
+                    dif = neighborhood.diffusion
+                    n_neighbors = len(neighborhood.nodes)
+                    p -= dif * n_neighbors # Contribution of this node
+                    # neighbor_term += dif * np.sum([dif * Z[neighbor.name][-1] for neighbor in neighborhood.nodes], axis=0)
+                    neighbor_stack = np.array([Z[neighbor.name][-1] for neighbor in neighborhood.nodes])
+                    print("stack", neighbor_stack.shape)
+                    neighbor_sum = np.sum(neighbor_stack, axis=0)
+                    print("sum", neighbor_sum.shape)
+                    neighbor_term += dif * neighbor_sum
+                    print("term (new)", neighbor_term.shape)
+                Zt = p * Zt + neighbor_term.reshape(-1)
+                print("new shape", Zt.shape)
 
                 # Push to results
                 Zt = np.clip(Zt, 0, None)
@@ -1344,4 +1468,6 @@ class OmicsGenerator:
         out += "\n\t".join([ str(x) for x in self._interactions ] )
         out += "\n\nInterventions:\n\t"
         out += "\n\t".join([ str(x) for x in self._interventions ] )
+        out += "\n\tNeighborhoods:\n\t"
+        out += "\n\t".join([ str(x) for x in self._neighborhoods ] )
         return out

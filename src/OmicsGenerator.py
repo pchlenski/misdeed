@@ -953,23 +953,16 @@ class OmicsGenerator:
                     Zt += noise
 
                 # Get diffusion
-                print("old shape", Zt.shape)
                 p = 1
                 neighbor_term = np.zeros_like(Zt)
-                print("term (init)", neighbor_term)
                 for neighborhood in node.neighborhoods:
                     dif = neighborhood.diffusion
                     n_neighbors = len(neighborhood.nodes)
                     p -= dif * n_neighbors # Contribution of this node
-                    # neighbor_term += dif * np.sum([dif * Z[neighbor.name][-1] for neighbor in neighborhood.nodes], axis=0)
                     neighbor_stack = np.array([Z[neighbor.name][-1] for neighbor in neighborhood.nodes])
-                    print("stack", neighbor_stack.shape)
                     neighbor_sum = np.sum(neighbor_stack, axis=0)
-                    print("sum", neighbor_sum.shape)
                     neighbor_term += dif * neighbor_sum
-                    print("term (new)", neighbor_term.shape)
                 Zt = p * Zt + neighbor_term.reshape(-1)
-                print("new shape", Zt.shape)
 
                 # Push to results
                 Zt = np.clip(Zt, 0, None)

@@ -459,11 +459,12 @@ class OmicsGenerator:
 
         # Check namespace
         if name is None:
-            name_idx = 0
-            while f"i{name_idx}" in self._namespace:
-                name_idx += 1
-            name = f"{name_idx}"
-        elif name in self._namespace:
+            # name_idx = 0
+            # while f"i{name_idx}" in self._namespace:
+            #     name_idx += 1
+            # name = f"i{name_idx}"
+            name = f"{outbound_node_name}->{inbound_node_name}"
+        if name in self._namespace:
             raise Exception(f"Name {name} already in use. Please use a unique name")
 
         # Check verbosity

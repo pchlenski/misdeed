@@ -414,7 +414,7 @@ class OmicsGenerator:
             name_idx = 0
             while f"i{name_idx}" in self._namespace:
                 name_idx += 1
-            name = f"{name_idx}"
+            name = f"i{name_idx}"
         elif name in self._namespace:
             raise Exception(f"Name {name} already in use. Please use a unique name")
 

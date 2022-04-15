@@ -658,7 +658,7 @@ class OmicsGenerator:
         # Check namespace
         if name is None:
             name_idx = 0
-            while f"i{name_idx}" in self._namespace:
+            while f"N{name_idx}" in self._namespace:
                 name_idx += 1
             name = f"N{name_idx}"
         elif name in self._namespace:

@@ -1,0 +1,12 @@
+LICENSE
+README.md
+setup.py
+MiSDEED.egg-info/PKG-INFO
+MiSDEED.egg-info/SOURCES.txt
+MiSDEED.egg-info/dependency_links.txt
+MiSDEED.egg-info/requires.txt
+MiSDEED.egg-info/top_level.txt
+src/OmicsGenerator.py
+src/__init__.py
+src/inference.py
+src/visualization.py

@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: MiSDEED
+Version: 1.0.3
+Summary: Microbiome Synthetic Data Engine for Experimental Design 
+Home-page: http://www.github.com/pchlenski/misdeed
+Author: Philippe Chlenski
+Author-email: pac@cs.columbia.edu
+License-File: LICENSE
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: sklearn
+Requires-Dist: scipy
+Requires-Dist: matplotlib
